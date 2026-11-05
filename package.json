@@ -1,0 +1,12 @@
+{
+  "name": "jac-attendance-portal",
+  "version": "1.0.0",
+  "description": "JAC Media Attendance & Leave Portal with Live Photo Capture and Admin Panel",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed"
+  }
+}
+
