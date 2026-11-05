@@ -31,14 +31,67 @@ connectDB().then(async (isConnected) => {
   }
 });
 
-// Middleware
-app.use(cors());
+// Allowed frontend origins for CORS
+const allowedOrigins = [
+  'https://jacattendance-delta.vercel.app',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5000',
+];
+
+// Comprehensive CORS Middleware with explicit header reflection & preflight handling
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      /^https?:\/\/localhost(:\d+)?$/.test(origin)
+    ) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+  );
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Respond immediately to browser preflight OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// Also mount standard cors middleware with credentials
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  })
+);
+
 // 20mb limit to handle camera snapshot uploads smoothly
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-// Static route to serve uploaded verification photos
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Static route to serve uploaded verification photos with CORS headers
+app.use(
+  '/uploads',
+  express.static(path.join(__dirname, '../uploads'), {
+    setHeaders: (res) => {
+      res.set('Access-Control-Allow-Origin', '*');
+    },
+  })
+);
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
