@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/client';
+import api, { getPhotoUrl } from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import PhotoModal from '../components/PhotoModal';
 import { NavLink } from 'react-router-dom';
@@ -227,7 +227,7 @@ export default function AdminDashboard() {
                         className="w-full h-full relative cursor-pointer overflow-hidden"
                       >
                         <img
-                          src={clockInPhoto}
+                          src={getPhotoUrl(clockInPhoto)}
                           alt={rec.user?.name}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                         />

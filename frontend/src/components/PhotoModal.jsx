@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, ExternalLink, Calendar, Clock, User } from 'lucide-react';
+import { getPhotoUrl } from '../api/client';
 
 export default function PhotoModal({ photoUrl, title, meta, onClose }) {
   if (!photoUrl) return null;
@@ -11,7 +12,7 @@ export default function PhotoModal({ photoUrl, title, meta, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
             <h4 className="font-semibold text-slate-800 text-xs sm:text-sm truncate">
               {title || 'Attendance Verification Selfie'}
             </h4>
@@ -27,7 +28,7 @@ export default function PhotoModal({ photoUrl, title, meta, onClose }) {
         {/* High-res Image preview */}
         <div className="bg-slate-950 flex items-center justify-center max-h-[60vh] sm:max-h-[460px] overflow-hidden">
           <img
-            src={photoUrl}
+            src={getPhotoUrl(photoUrl)}
             alt="Verification photo"
             className="max-h-[60vh] sm:max-h-[460px] w-auto object-contain"
           />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/client';
+import api, { getPhotoUrl } from '../api/client';
 import CameraCaptureModal from '../components/CameraCaptureModal';
 import StatusBadge from '../components/StatusBadge';
 import PhotoModal from '../components/PhotoModal';
@@ -227,7 +227,7 @@ export default function EmployeeDashboard() {
                   className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-indigo-200 shadow-sm hover:opacity-90 relative group"
                 >
                   <img
-                    src={todayRecord.clockIn.photo}
+                    src={getPhotoUrl(todayRecord.clockIn.photo)}
                     alt="Clock in selfie"
                     className="w-full h-full object-cover"
                   />
@@ -281,7 +281,7 @@ export default function EmployeeDashboard() {
                   className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 border-purple-200 shadow-sm hover:opacity-90 relative group"
                 >
                   <img
-                    src={todayRecord.clockOut.photo}
+                    src={getPhotoUrl(todayRecord.clockOut.photo)}
                     alt="Clock out selfie"
                     className="w-full h-full object-cover"
                   />
