@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-// Use VITE_API_URL from environment or fallback to '/api' for local proxy
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+// Render production backend URL
+const RENDER_BACKEND_URL = 'https://jac-attendance-backend-5inu.onrender.com/api';
+
+// Use VITE_API_URL if configured, fallback to Render backend in production, or '/api' in local dev proxy
+const baseURL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.PROD ? RENDER_BACKEND_URL : '/api');
 
 const api = axios.create({
   baseURL,
@@ -13,8 +18,8 @@ export const getPhotoUrl = (photoPath) => {
   if (photoPath.startsWith('http') || photoPath.startsWith('data:')) {
     return photoPath;
   }
-  // Strip trailing /api if present to get server origin
-  const serverOrigin = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
+  const apiEndpoint = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? RENDER_BACKEND_URL : '');
+  const serverOrigin = apiEndpoint.replace(/\/api\/?$/, '');
   return `${serverOrigin}${photoPath.startsWith('/') ? photoPath : `/${photoPath}`}`;
 };
 
