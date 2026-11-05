@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "JAC Media Attendance & Leave Portal with Live Photo Capture and Admin Panel",
   "scripts": {
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
+    "vercel-build": "npm --prefix frontend install && npm --prefix frontend run build",
     "install:all": "npm --prefix backend install && npm --prefix frontend install",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",

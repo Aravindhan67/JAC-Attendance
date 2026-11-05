@@ -66,6 +66,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 JAC Media Attendance Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`🚀 JAC Media Attendance Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
