@@ -10,11 +10,13 @@ import {
   Clock,
   X,
   FileText,
+  Sparkles,
 } from 'lucide-react';
 
 export default function MyLeaves() {
   const [leaves, setLeaves] = useState([]);
   const [stats, setStats] = useState(null);
+  const [monthlyQuota, setMonthlyQuota] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -33,6 +35,9 @@ export default function MyLeaves() {
       if (res.data.success) {
         setLeaves(res.data.data);
         setStats(res.data.stats);
+        if (res.data.monthlyQuota) {
+          setMonthlyQuota(res.data.monthlyQuota);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -62,6 +67,22 @@ export default function MyLeaves() {
     if (new Date(endDate) < new Date(startDate)) {
       setFormError('End date cannot be earlier than start date.');
       return;
+    }
+
+    // Client-side quota pre-check
+    if (monthlyQuota?.quotas?.[leaveType]) {
+      const quota = monthlyQuota.quotas[leaveType];
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffTime = Math.abs(end - start);
+      const requestedDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      if (requestedDays > quota.remaining) {
+        setFormError(
+          `Monthly limit exceeded for ${leaveType}. You have ${quota.remaining} day(s) remaining for ${monthlyQuota.month} (Limit: ${quota.limit} day(s)/month). Allowance refreshes next month.`
+        );
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -126,6 +147,94 @@ export default function MyLeaves() {
           Apply for Leave
         </button>
       </div>
+
+      {/* Monthly Leave Allowance Cards - Refreshes on 1st of every month */}
+      {monthlyQuota?.quotas && (
+        <div className="bg-gradient-to-r from-neutral-950 via-zinc-950 to-neutral-900 p-5 sm:p-6 rounded-3xl border border-amber-500/30 shadow-xl text-white relative overflow-hidden">
+          <div className="absolute top-0 right-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/10">
+            <div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider border border-amber-400/30">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Monthly Quota • {monthlyQuota.month}</span>
+              </div>
+              <h2 className="text-lg font-black text-white mt-1.5 tracking-tight">
+                Monthly Leave Allowance
+              </h2>
+            </div>
+            <div className="text-[11px] text-amber-300/90 font-semibold bg-amber-400/10 px-3.5 py-1.5 rounded-xl border border-amber-400/25 self-start sm:self-auto flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span>Refreshes on the 1st of every month</span>
+            </div>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-3.5 mt-4">
+            {/* Casual Leave */}
+            <div className="bg-black/60 border border-white/10 hover:border-amber-400/40 rounded-2xl p-4 transition-all shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Casual Leave (CL)</span>
+                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  1 Day / Mo
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-amber-400">
+                  {monthlyQuota.quotas['Casual Leave']?.remaining ?? 1}
+                </span>
+                <span className="text-xs font-semibold text-slate-400">
+                  / {monthlyQuota.quotas['Casual Leave']?.limit ?? 1} day left
+                </span>
+              </div>
+              <div className="mt-2 text-[11px] text-slate-400">
+                Used: <span className="font-bold text-white">{monthlyQuota.quotas['Casual Leave']?.used ?? 0} day</span>
+              </div>
+            </div>
+
+            {/* Sick Leave */}
+            <div className="bg-black/60 border border-white/10 hover:border-amber-400/40 rounded-2xl p-4 transition-all shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Sick Leave (SL)</span>
+                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  2 Days / Mo
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-amber-400">
+                  {monthlyQuota.quotas['Sick Leave']?.remaining ?? 2}
+                </span>
+                <span className="text-xs font-semibold text-slate-400">
+                  / {monthlyQuota.quotas['Sick Leave']?.limit ?? 2} days left
+                </span>
+              </div>
+              <div className="mt-2 text-[11px] text-slate-400">
+                Used: <span className="font-bold text-white">{monthlyQuota.quotas['Sick Leave']?.used ?? 0} days</span>
+              </div>
+            </div>
+
+            {/* Emergency Leave */}
+            <div className="bg-black/60 border border-white/10 hover:border-amber-400/40 rounded-2xl p-4 transition-all shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-300">Emergency Leave</span>
+                <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                  1 Day / Mo
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-baseline gap-1.5">
+                <span className="text-3xl font-black text-amber-400">
+                  {monthlyQuota.quotas['Emergency Leave']?.remaining ?? 1}
+                </span>
+                <span className="text-xs font-semibold text-slate-400">
+                  / {monthlyQuota.quotas['Emergency Leave']?.limit ?? 1} day left
+                </span>
+              </div>
+              <div className="mt-2 text-[11px] text-slate-400">
+                Used: <span className="font-bold text-white">{monthlyQuota.quotas['Emergency Leave']?.used ?? 0} day</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -234,19 +343,29 @@ export default function MyLeaves() {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Leave Type
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Leave Type
+                  </label>
+                  <span className="text-[10px] text-amber-700 font-bold">
+                    Quota resets monthly
+                  </span>
+                </div>
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
                 >
-                  <option value="Casual Leave">Casual Leave (CL)</option>
-                  <option value="Sick Leave">Sick Leave (SL)</option>
-                  <option value="Paid Leave">Paid Leave (PL)</option>
-                  <option value="Emergency Leave">Emergency Leave</option>
-                  <option value="Unpaid Leave">Unpaid Leave</option>
+                  <option value="Casual Leave">
+                    Casual Leave (CL) — {monthlyQuota?.quotas?.['Casual Leave']?.remaining ?? 1} day left this month
+                  </option>
+                  <option value="Sick Leave">
+                    Sick Leave (SL) — {monthlyQuota?.quotas?.['Sick Leave']?.remaining ?? 2} days left this month
+                  </option>
+                  <option value="Emergency Leave">
+                    Emergency Leave — {monthlyQuota?.quotas?.['Emergency Leave']?.remaining ?? 1} day left this month
+                  </option>
+                  <option value="Unpaid Leave">Unpaid Leave (No Quota Limit)</option>
                 </select>
               </div>
 

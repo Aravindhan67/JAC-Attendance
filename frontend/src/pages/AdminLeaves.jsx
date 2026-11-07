@@ -123,6 +123,15 @@ export default function AdminLeaves() {
         </div>
       </div>
 
+      {/* Monthly Policy Info Strip */}
+      <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-slate-600 bg-white border border-slate-200/80 px-4 py-3 rounded-2xl shadow-xs">
+        <span className="text-slate-900 font-extrabold uppercase tracking-wider text-[10px]">Monthly Policy Quotas:</span>
+        <span className="bg-amber-50 text-amber-900 border border-amber-200/60 px-2.5 py-0.5 rounded-lg font-bold">Casual: 1 day/mo</span>
+        <span className="bg-amber-50 text-amber-900 border border-amber-200/60 px-2.5 py-0.5 rounded-lg font-bold">Sick: 2 days/mo</span>
+        <span className="bg-amber-50 text-amber-900 border border-amber-200/60 px-2.5 py-0.5 rounded-lg font-bold">Emergency: 1 day/mo</span>
+        <span className="text-slate-400 text-[10px] ml-auto">All quotas automatically refresh on the 1st of every month</span>
+      </div>
+
       {/* Leave Requests Table */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
