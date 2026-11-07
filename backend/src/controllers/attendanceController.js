@@ -2,13 +2,37 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { saveBase64Image } = require('../utils/photoStorage');
 
-// Helper to get local date string YYYY-MM-DD
+// Timezone and Cutoff Rules (Asia/Kolkata, UTC+05:30)
+const TIMEZONE = 'Asia/Kolkata';
+
+// Helper to get local date string YYYY-MM-DD in Asia/Kolkata
 const getTodayDateString = (date = new Date()) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(date);
 };
+
+// Helper to get current minutes from midnight in Asia/Kolkata
+const getLocalTimeParts = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: TIMEZONE,
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(date);
+
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+  const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+  const totalMinutes = hour * 60 + minute;
+
+  return { hour, minute, second, totalMinutes };
+};
+
+// Cutoff limits:
+// Check-in NOT allowed after 09:45 AM (9 * 60 + 45 = 585 minutes)
+const CLOCK_IN_CUTOFF_MINUTES = 9 * 60 + 45; // 09:45 AM
+// Check-out NOT allowed after 07:00 PM (19 * 60 = 1140 minutes)
+const CLOCK_OUT_CUTOFF_MINUTES = 19 * 60; // 07:00 PM (19:00)
 
 // @desc Clock In with photo capture
 // @route POST /api/attendance/clock-in
@@ -16,6 +40,23 @@ exports.clockIn = async (req, res) => {
   try {
     const userId = req.user._id;
     const { photo, note, location } = req.body;
+
+    const { totalMinutes } = getLocalTimeParts();
+
+    // Enforce Rule: Check-in not allowed after 09:45 AM
+    if (totalMinutes > CLOCK_IN_CUTOFF_MINUTES) {
+      const formattedCurrentTime = new Intl.DateTimeFormat('en-IN', {
+        timeZone: TIMEZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(new Date());
+
+      return res.status(403).json({
+        success: false,
+        message: `Check-in is not allowed after 09:45 AM. Current time is ${formattedCurrentTime}. The morning punch-in window has closed. Please contact Admin or HR.`,
+      });
+    }
 
     if (!photo) {
       return res.status(400).json({ success: false, message: 'Photo verification is required to Clock In' });
@@ -32,16 +73,13 @@ exports.clockIn = async (req, res) => {
     const photoPath = saveBase64Image(photo, `clockin-${req.user.employeeId}`);
 
     const now = new Date();
-    // Calculate if late
-    // e.g. shiftStartTime is "09:30". Grace period = 15 minutes -> 09:45
+    // Calculate if late: Standard shift is 09:30 AM. Punches between 09:31 and 09:45 AM are marked 'late'
     let status = 'present';
     const shiftTime = req.user.shiftStartTime || '09:30';
     const [shiftHour, shiftMin] = shiftTime.split(':').map(Number);
-    
-    const shiftDateTime = new Date();
-    shiftDateTime.setHours(shiftHour, shiftMin + 15, 0, 0); // 15 mins grace period
+    const standardStartMinutes = shiftHour * 60 + shiftMin;
 
-    if (now > shiftDateTime) {
+    if (totalMinutes > standardStartMinutes) {
       status = 'late';
     }
 
@@ -71,7 +109,7 @@ exports.clockIn = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Clocked in successfully at ${now.toLocaleTimeString()}`,
+      message: `Clocked in successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}`,
       data: record,
     });
   } catch (error) {
@@ -86,6 +124,23 @@ exports.clockOut = async (req, res) => {
   try {
     const userId = req.user._id;
     const { photo, note, location } = req.body;
+
+    const { totalMinutes } = getLocalTimeParts();
+
+    // Enforce Rule: Check-out not allowed after 07:00 PM (19:00)
+    if (totalMinutes > CLOCK_OUT_CUTOFF_MINUTES) {
+      const formattedCurrentTime = new Intl.DateTimeFormat('en-IN', {
+        timeZone: TIMEZONE,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(new Date());
+
+      return res.status(403).json({
+        success: false,
+        message: `Check-out is not allowed after 07:00 PM. Current time is ${formattedCurrentTime}. The evening punch-out window has closed. Please contact Admin or HR to regularize your shift.`,
+      });
+    }
 
     if (!photo) {
       return res.status(400).json({ success: false, message: 'Photo verification is required to Clock Out' });
@@ -127,7 +182,7 @@ exports.clockOut = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Clocked out successfully. Total hours: ${totalHours} hrs`,
+      message: `Clocked out successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}. Total hours: ${totalHours} hrs`,
       data: record,
     });
   } catch (error) {
@@ -142,11 +197,21 @@ exports.getTodayStatus = async (req, res) => {
   try {
     const today = getTodayDateString();
     const record = await Attendance.findOne({ user: req.user._id, date: today });
+    const { totalMinutes } = getLocalTimeParts();
+
+    const isCheckInClosed = totalMinutes > CLOCK_IN_CUTOFF_MINUTES;
+    const isCheckOutClosed = totalMinutes > CLOCK_OUT_CUTOFF_MINUTES;
 
     res.json({
       success: true,
       data: record || null,
       serverTime: new Date(),
+      rules: {
+        checkInCutoff: '09:45 AM',
+        checkOutCutoff: '07:00 PM',
+        isCheckInClosed,
+        isCheckOutClosed,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

@@ -15,6 +15,7 @@ import {
   Sparkles,
   MapPin,
   FileText,
+  Lock,
 } from 'lucide-react';
 
 export default function EmployeeDashboard() {
@@ -25,12 +26,31 @@ export default function EmployeeDashboard() {
   const [modalType, setModalType] = useState(null); // 'Clock In' | 'Clock Out' | null
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [toast, setToast] = useState(null);
+  const [serverRules, setServerRules] = useState({
+    isCheckInClosed: false,
+    isCheckOutClosed: false,
+    checkInCutoff: '09:45 AM',
+    checkOutCutoff: '07:00 PM',
+  });
+
+  const getPunchWindowStatus = () => {
+    const now = new Date();
+    const totalMinutes = now.getHours() * 60 + now.getMinutes();
+    // 09:45 AM cutoff -> 585 minutes
+    const isPastCheckInCutoff = serverRules.isCheckInClosed || totalMinutes > 9 * 60 + 45;
+    // 07:00 PM cutoff -> 1140 minutes
+    const isPastCheckOutCutoff = serverRules.isCheckOutClosed || totalMinutes > 19 * 60;
+    return { isPastCheckInCutoff, isPastCheckOutCutoff };
+  };
 
   const fetchTodayStatus = async () => {
     try {
       const res = await api.get('/attendance/today');
       if (res.data.success) {
         setTodayRecord(res.data.data);
+        if (res.data.rules) {
+          setServerRules(res.data.rules);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -58,9 +78,18 @@ export default function EmployeeDashboard() {
     // Listen to center camera trigger from mobile bottom nav
     const handleOpenPunchModal = () => {
       setTodayRecord((currRecord) => {
+        const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
         if (!currRecord?.clockIn?.timestamp) {
+          if (isPastCheckInCutoff) {
+            showToast('Check-in is not allowed after 09:45 AM. The morning window has closed.', 'error');
+            return currRecord;
+          }
           setModalType('Clock In');
         } else if (!currRecord?.clockOut?.timestamp) {
+          if (isPastCheckOutCutoff) {
+            showToast('Check-out is not allowed after 07:00 PM. The evening window has closed.', 'error');
+            return currRecord;
+          }
           setModalType('Clock Out');
         }
         return currRecord;
@@ -69,7 +98,7 @@ export default function EmployeeDashboard() {
 
     window.addEventListener('open-punch-modal', handleOpenPunchModal);
     return () => window.removeEventListener('open-punch-modal', handleOpenPunchModal);
-  }, []);
+  }, [serverRules]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -77,6 +106,20 @@ export default function EmployeeDashboard() {
   };
 
   const handleClockAction = async ({ photo, note, location }) => {
+    const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
+
+    if (modalType === 'Clock In' && isPastCheckInCutoff) {
+      showToast('Check-in is not allowed after 09:45 AM. Punch window closed.', 'error');
+      setModalType(null);
+      return;
+    }
+
+    if (modalType === 'Clock Out' && isPastCheckOutCutoff) {
+      showToast('Check-out is not allowed after 07:00 PM. Punch window closed.', 'error');
+      setModalType(null);
+      return;
+    }
+
     try {
       if (modalType === 'Clock In') {
         const res = await api.post('/attendance/clock-in', { photo, note, location: location || 'Office' });
@@ -95,6 +138,7 @@ export default function EmployeeDashboard() {
 
   const isClockedIn = Boolean(todayRecord?.clockIn?.timestamp);
   const isClockedOut = Boolean(todayRecord?.clockOut?.timestamp);
+  const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
 
   return (
     <div className="space-y-6">
@@ -130,9 +174,13 @@ export default function EmployeeDashboard() {
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300">
             Hello, {user?.name || 'Developer'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-lg">
+          <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-lg leading-relaxed">
             Daily shift: <span className="font-bold text-amber-200">{user?.shiftStartTime || '09:30'} AM</span> to{' '}
             <span className="font-bold text-amber-200">{user?.shiftEndTime || '06:30'} PM</span>. Facial selfie verification active.
+            <br />
+            <span className="inline-block mt-1 text-[11px] font-semibold text-amber-300/90 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-400/25">
+              Strict Timings: Check-in before <span className="font-bold text-white">09:45 AM</span> • Check-out before <span className="font-bold text-white">07:00 PM</span>
+            </span>
           </p>
         </div>
 
@@ -165,16 +213,24 @@ export default function EmployeeDashboard() {
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1 tracking-tight">
               {!isClockedIn
-                ? 'Ready to clock in for your shift?'
+                ? isPastCheckInCutoff
+                  ? '⚠️ Check-In Window Closed'
+                  : 'Ready to clock in for your shift?'
                 : !isClockedOut
-                ? '🟢 Active Shift in Progress'
+                ? isPastCheckOutCutoff
+                  ? '⚠️ Check-Out Window Closed'
+                  : '🟢 Active Shift in Progress'
                 : '✨ Day Completed — Great Work!'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {!isClockedIn
-                ? 'Click below to snap a quick selfie, select work mode (Office, WFH, On-site) and log punch.'
+                ? isPastCheckInCutoff
+                  ? 'Check-in is only permitted up to 09:45 AM. For regularizing your attendance, please reach out to Admin or HR.'
+                  : 'Click below to snap a quick selfie, select work mode (Office, WFH, On-site) and log punch (cutoff: 09:45 AM).'
                 : !isClockedOut
-                ? 'Your shift is currently active. Snap your selfie when clocking out at end of workday.'
+                ? isPastCheckOutCutoff
+                  ? 'Check-out is only permitted up to 07:00 PM. Please reach out to Admin or HR to finalize your shift hours.'
+                  : 'Your shift is currently active. Snap your selfie when clocking out at end of workday (cutoff: 07:00 PM).'
                 : 'All shift logs and hours have been recorded in the enterprise registry.'}
             </p>
           </div>
@@ -182,23 +238,57 @@ export default function EmployeeDashboard() {
           {/* Action Trigger Button - Premium Gold Accent */}
           <div className="w-full sm:w-auto">
             {!isClockedIn ? (
-              <button
-                type="button"
-                onClick={() => setModalType('Clock In')}
-                className="w-full sm:w-auto justify-center bg-gradient-to-r from-[#B38728] via-[#D4AF37] to-[#C59B27] hover:from-[#A2771E] hover:to-[#B38728] text-slate-950 font-bold px-7 py-3.5 rounded-2xl shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide"
-              >
-                <Camera className="w-5 h-5 text-slate-950 stroke-[2.5]" />
-                Clock In with Photo
-              </button>
+              isPastCheckInCutoff ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    showToast(
+                      'Check-in is not allowed after 09:45 AM. The daily punch-in window has closed. Please contact Admin or HR.',
+                      'error'
+                    )
+                  }
+                  className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/80 border border-amber-500/30 hover:border-rose-500/50 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide cursor-not-allowed shadow-md"
+                  title="Check-in closed after 09:45 AM"
+                >
+                  <Lock className="w-5 h-5 text-amber-400 stroke-[2.2]" />
+                  Check-In Closed (09:45 AM)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setModalType('Clock In')}
+                  className="w-full sm:w-auto justify-center bg-gradient-to-r from-[#B38728] via-[#D4AF37] to-[#C59B27] hover:from-[#A2771E] hover:to-[#B38728] text-slate-950 font-bold px-7 py-3.5 rounded-2xl shadow-md hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide"
+                >
+                  <Camera className="w-5 h-5 text-slate-950 stroke-[2.5]" />
+                  Clock In with Photo
+                </button>
+              )
             ) : !isClockedOut ? (
-              <button
-                type="button"
-                onClick={() => setModalType('Clock Out')}
-                className="w-full sm:w-auto justify-center bg-gradient-to-r from-neutral-900 via-zinc-900 to-black hover:from-black hover:to-neutral-900 text-amber-300 border-2 border-amber-400/50 font-black px-7 py-3.5 rounded-2xl shadow-lg shadow-black/40 hover:shadow-amber-500/20 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide"
-              >
-                <Camera className="w-5 h-5 text-amber-400 stroke-[2.5]" />
-                Clock Out with Photo
-              </button>
+              isPastCheckOutCutoff ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    showToast(
+                      'Check-out is not allowed after 07:00 PM. The daily punch-out window has closed. Please contact Admin or HR.',
+                      'error'
+                    )
+                  }
+                  className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/80 border border-amber-500/30 hover:border-rose-500/50 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide cursor-not-allowed shadow-md"
+                  title="Check-out closed after 07:00 PM"
+                >
+                  <Lock className="w-5 h-5 text-amber-400 stroke-[2.2]" />
+                  Check-Out Closed (07:00 PM)
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setModalType('Clock Out')}
+                  className="w-full sm:w-auto justify-center bg-gradient-to-r from-neutral-900 via-zinc-900 to-black hover:from-black hover:to-neutral-900 text-amber-300 border-2 border-amber-400/50 font-black px-7 py-3.5 rounded-2xl shadow-lg shadow-black/40 hover:shadow-amber-500/20 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide"
+                >
+                  <Camera className="w-5 h-5 text-amber-400 stroke-[2.5]" />
+                  Clock Out with Photo
+                </button>
+              )
             ) : (
               <div className="w-full sm:w-auto justify-center flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold px-5 py-3 rounded-2xl shadow-xs">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />

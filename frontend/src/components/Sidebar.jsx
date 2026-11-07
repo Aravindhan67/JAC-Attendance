@@ -78,7 +78,9 @@ export default function Sidebar() {
           <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
             Standard: <span className="font-bold text-slate-900">09:30 AM – 06:30 PM</span>
             <br />
-            Grace period: <span className="text-emerald-700 font-bold">15 mins</span>
+            Check-In Cutoff: <span className="text-amber-800 font-bold">09:45 AM</span>
+            <br />
+            Check-Out Cutoff: <span className="text-amber-800 font-bold">07:00 PM</span>
           </p>
         </div>
       </div>
