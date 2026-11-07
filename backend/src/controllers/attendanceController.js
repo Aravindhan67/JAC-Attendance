@@ -490,7 +490,7 @@ exports.getTodayFeed = async (req, res) => {
 // @route PUT /api/attendance/:id
 exports.updateAttendance = async (req, res) => {
   try {
-    const { status, adminRemark, totalHours } = req.body;
+    const { status, adminRemark, totalHours, approvalStatus } = req.body;
     const record = await Attendance.findById(req.params.id);
 
     if (!record) {
@@ -498,6 +498,7 @@ exports.updateAttendance = async (req, res) => {
     }
 
     if (status) record.status = status;
+    if (approvalStatus) record.approvalStatus = approvalStatus;
     if (adminRemark !== undefined) record.adminRemark = adminRemark;
     if (totalHours !== undefined) record.totalHours = totalHours;
 
