@@ -168,6 +168,7 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const isPendingApproval = todayRecord?.approvalStatus === 'pending';
   const isClockedIn = Boolean(todayRecord?.clockIn?.timestamp);
   const isClockedOut = Boolean(todayRecord?.clockOut?.timestamp);
   const { isPastCheckInCutoff, isPastCheckOutCutoff, hasRemainingExceptions } = getPunchWindowStatus();
@@ -280,7 +281,12 @@ export default function EmployeeDashboard() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase font-extrabold tracking-wider text-slate-400">PUNCH STATUS</span>
-              {todayRecord ? (
+              {isPendingApproval ? (
+                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-950 border border-amber-300 animate-pulse flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-amber-700" />
+                  Approval Pending
+                </span>
+              ) : todayRecord ? (
                 <StatusBadge status={todayRecord.status} />
               ) : (
                 <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
@@ -294,7 +300,9 @@ export default function EmployeeDashboard() {
               )}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1 tracking-tight">
-              {!isClockedIn
+              {isPendingApproval
+                ? `🕒 ${todayRecord.pendingRequest?.requestType || 'Punch'} Request Sent to Admin`
+                : !isClockedIn
                 ? isPastCheckInCutoff
                   ? hasRemainingExceptions
                     ? '🕒 Late / Forgot Check-In Available'
@@ -309,16 +317,18 @@ export default function EmployeeDashboard() {
                 : '✨ Day Completed — Great Work!'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              {!isClockedIn
+              {isPendingApproval
+                ? `Your ${todayRecord.pendingRequest?.requestType} was sent with your selfie photo and reason (${todayRecord.pendingRequest?.note || 'No note'}). Once Admin approves, you will be automatically ${todayRecord.pendingRequest?.requestType?.includes('Check-Out') ? 'checked out' : 'checked in'}!`
+                : !isClockedIn
                 ? isPastCheckInCutoff
                   ? hasRemainingExceptions
-                    ? `It is past 09:45 AM. You have ${exceptionQuota.remaining} of 3 monthly Late/Forgot Check-In passes remaining. Snap selfie & provide reason.`
+                    ? `It is past 09:45 AM. You have ${exceptionQuota.remaining} of 3 monthly Late/Forgot Check-In passes remaining. Snap selfie & provide reason to send to Admin.`
                     : 'You have used all 3 Late / Forgot Check-in allowances for this month. Check-in is locked until the 1st of next month.'
                   : 'Standard shift check-in active (cutoff: 09:45 AM). Snap selfie to log punch.'
                 : !isClockedOut
                 ? isPastCheckOutCutoff
                   ? hasRemainingExceptions
-                    ? `It is past 07:00 PM. You have ${exceptionQuota.remaining} of 3 monthly allowances available to log your checkout.`
+                    ? `It is past 07:00 PM. You have ${exceptionQuota.remaining} of 3 monthly allowances available to request checkout from Admin.`
                     : 'You have used all 3 Late / Forgot punch allowances for this month. Please reach out to Admin or HR.'
                   : 'Your shift is currently active. Snap your selfie when clocking out at end of workday (cutoff: 07:00 PM).'
                 : 'All shift logs and hours have been recorded in the enterprise registry.'}
@@ -327,7 +337,12 @@ export default function EmployeeDashboard() {
 
           {/* Action Trigger Button - Premium Gold Accent */}
           <div className="w-full sm:w-auto">
-            {!isClockedIn ? (
+            {isPendingApproval ? (
+              <div className="w-full sm:w-auto justify-center flex items-center gap-2 bg-amber-50 border border-amber-300 text-amber-950 text-xs font-black px-5 py-3.5 rounded-2xl shadow-xs">
+                <RefreshCw className="w-4 h-4 text-amber-600 animate-spin" />
+                <span>Awaiting Admin Approval</span>
+              </div>
+            ) : !isClockedIn ? (
               isPastCheckInCutoff ? (
                 hasRemainingExceptions ? (
                   <button

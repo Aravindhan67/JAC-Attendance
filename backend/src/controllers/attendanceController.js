@@ -113,26 +113,76 @@ exports.clockIn = async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already clocked in today' });
     }
 
+    if (record && record.approvalStatus === 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'Your punch request is already pending Admin approval.',
+      });
+    }
+
     // Save photo
     const photoPath = saveBase64Image(photo, `clockin-${req.user.employeeId}`);
-
     const now = new Date();
-    // Calculate if late: Standard shift is 09:30 AM
+
+    // Check if this requires Admin Approval (Late Check-In or Forgot Check-In)
+    if (exceptionType !== 'none') {
+      const requestData = {
+        requestType: effectivePunchType,
+        requestedAt: now,
+        photo: photoPath,
+        note: note || '',
+        location: location || 'Office',
+        status: 'pending',
+      };
+
+      if (!record) {
+        record = new Attendance({
+          user: userId,
+          date: today,
+          status: 'late',
+          exceptionType,
+          approvalStatus: 'pending',
+          pendingRequest: requestData,
+        });
+      } else {
+        record.approvalStatus = 'pending';
+        record.exceptionType = exceptionType;
+        record.status = 'late';
+        record.pendingRequest = requestData;
+      }
+
+      await record.save();
+
+      const newRemaining = remainingExceptions - 1;
+      return res.status(200).json({
+        success: true,
+        message: `${effectivePunchType} request sent to Admin for approval. You will be automatically clocked in once approved. (${newRemaining} of ${MONTHLY_EXCEPTION_LIMIT} monthly allowances remaining)`,
+        data: record,
+        isPendingApproval: true,
+        exceptionQuota: {
+          limit: MONTHLY_EXCEPTION_LIMIT,
+          used: MONTHLY_EXCEPTION_LIMIT - newRemaining,
+          remaining: newRemaining,
+        },
+      });
+    }
+
+    // Regular on-time Clock In (before 09:45 AM) -> Automatically checked in!
     let status = 'present';
     const shiftTime = req.user.shiftStartTime || '09:30';
     const [shiftHour, shiftMin] = shiftTime.split(':').map(Number);
     const standardStartMinutes = shiftHour * 60 + shiftMin;
 
-    if (totalMinutes > standardStartMinutes || exceptionType !== 'none') {
+    if (totalMinutes > standardStartMinutes) {
       status = 'late';
     }
 
     const clockInData = {
       timestamp: now,
       photo: photoPath,
-      note: note || (exceptionType !== 'none' ? `${exceptionType} recorded` : ''),
+      note: note || '',
       location: location || 'Office',
-      punchType: effectivePunchType,
+      punchType: 'Regular',
     };
 
     if (!record) {
@@ -141,30 +191,26 @@ exports.clockIn = async (req, res) => {
         date: today,
         clockIn: clockInData,
         status,
-        exceptionType,
+        approvalStatus: 'none',
+        exceptionType: 'none',
       });
     } else {
       record.clockIn = clockInData;
       record.status = status;
-      record.exceptionType = exceptionType;
+      record.approvalStatus = 'none';
+      record.exceptionType = 'none';
     }
 
     await record.save();
 
-    const newRemaining = exceptionType !== 'none' ? remainingExceptions - 1 : remainingExceptions;
-    let message = `Clocked in successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}`;
-    if (exceptionType !== 'none') {
-      message += ` (${exceptionType} applied • ${newRemaining} of ${MONTHLY_EXCEPTION_LIMIT} monthly allowances left)`;
-    }
-
     res.status(200).json({
       success: true,
-      message,
+      message: `Clocked in successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}`,
       data: record,
       exceptionQuota: {
         limit: MONTHLY_EXCEPTION_LIMIT,
-        used: MONTHLY_EXCEPTION_LIMIT - newRemaining,
-        remaining: newRemaining,
+        used: usedExceptions,
+        remaining: remainingExceptions,
       },
     });
   } catch (error) {
@@ -223,10 +269,42 @@ exports.clockOut = async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already clocked out today' });
     }
 
+    if (record.approvalStatus === 'pending') {
+      return res.status(400).json({ success: false, message: 'You already have a punch request pending Admin approval.' });
+    }
+
     const photoPath = saveBase64Image(photo, `clockout-${req.user.employeeId}`);
     const now = new Date();
 
-    // Calculate total hours
+    // If Forgot Check-Out (past 07:00 PM) -> Send to Admin for Approval!
+    if (isException) {
+      record.approvalStatus = 'pending';
+      record.pendingRequest = {
+        requestType: 'Forgot Check-Out',
+        requestedAt: now,
+        photo: photoPath,
+        note: note || '',
+        location: location || 'Office',
+        status: 'pending',
+      };
+
+      await record.save();
+
+      const newRemaining = remainingExceptions - 1;
+      return res.status(200).json({
+        success: true,
+        message: `Forgot Check-Out request sent to Admin for approval. You will be automatically clocked out once approved. (${newRemaining} of ${MONTHLY_EXCEPTION_LIMIT} monthly allowances remaining)`,
+        data: record,
+        isPendingApproval: true,
+        exceptionQuota: {
+          limit: MONTHLY_EXCEPTION_LIMIT,
+          used: MONTHLY_EXCEPTION_LIMIT - newRemaining,
+          remaining: newRemaining,
+        },
+      });
+    }
+
+    // Regular on-time Clock Out (before 07:00 PM) -> Automatically checked out!
     const clockInTime = new Date(record.clockIn.timestamp);
     const diffMs = now - clockInTime;
     const totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
@@ -234,37 +312,26 @@ exports.clockOut = async (req, res) => {
     record.clockOut = {
       timestamp: now,
       photo: photoPath,
-      note: note || (isException ? 'Forgot Check-Out recorded' : ''),
+      note: note || '',
       location: location || 'Office',
-      punchType: effectivePunchType,
+      punchType: 'Regular',
     };
     record.totalHours = totalHours;
 
-    if (isException && (!record.exceptionType || record.exceptionType === 'none')) {
-      record.exceptionType = 'Forgot Check-Out';
-    }
-
-    // If worked less than 4.5 hours, mark as half-day unless already marked late
     if (totalHours < 4.5 && record.status === 'present') {
       record.status = 'half-day';
     }
 
     await record.save();
 
-    const newRemaining = isException ? remainingExceptions - 1 : remainingExceptions;
-    let message = `Clocked out successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}. Total hours: ${totalHours} hrs`;
-    if (isException) {
-      message += ` (Forgot Check-Out applied • ${newRemaining} of ${MONTHLY_EXCEPTION_LIMIT} monthly allowances left)`;
-    }
-
     res.status(200).json({
       success: true,
-      message,
+      message: `Clocked out successfully at ${now.toLocaleTimeString('en-IN', { timeZone: TIMEZONE })}. Total hours: ${totalHours} hrs`,
       data: record,
       exceptionQuota: {
         limit: MONTHLY_EXCEPTION_LIMIT,
-        used: MONTHLY_EXCEPTION_LIMIT - newRemaining,
-        remaining: newRemaining,
+        used: usedExceptions,
+        remaining: remainingExceptions,
       },
     });
   } catch (error) {
@@ -437,6 +504,101 @@ exports.updateAttendance = async (req, res) => {
     await record.save();
     res.json({ success: true, message: 'Attendance updated successfully', data: record });
   } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc Admin: Get all pending regularization requests (Late Check-in, Forgot Check-in/out)
+// @route GET /api/attendance/regularize/pending
+exports.getPendingRegularizeRequests = async (req, res) => {
+  try {
+    const requests = await Attendance.find({ approvalStatus: 'pending' })
+      .populate('user', 'name employeeId department designation profileImage email')
+      .sort({ updatedAt: -1 });
+
+    res.json({
+      success: true,
+      count: requests.length,
+      data: requests,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc Admin: Review regularization request (Approve / Reject)
+// @route PUT /api/attendance/regularize/:id/review
+exports.reviewRegularizeRequest = async (req, res) => {
+  try {
+    const { status, adminRemarks } = req.body; // 'approved' | 'rejected'
+
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, message: "Status must be 'approved' or 'rejected'" });
+    }
+
+    const record = await Attendance.findById(req.params.id).populate('user', 'name employeeId email');
+    if (!record) {
+      return res.status(404).json({ success: false, message: 'Attendance record not found' });
+    }
+
+    if (record.approvalStatus !== 'pending' || !record.pendingRequest) {
+      return res.status(400).json({ success: false, message: 'No pending regularization request found for this record' });
+    }
+
+    const reqData = record.pendingRequest;
+    record.approvalStatus = status;
+    record.pendingRequest.status = status;
+    record.pendingRequest.adminRemarks = adminRemarks || '';
+    record.pendingRequest.reviewedBy = req.user._id;
+    record.pendingRequest.reviewedAt = new Date();
+    record.adminRemark = adminRemarks || `${status === 'approved' ? 'Approved' : 'Rejected'} by Admin (${req.user.name})`;
+
+    if (status === 'approved') {
+      // AUTOMATIC CHECK-IN OR CHECK-OUT
+      if (reqData.requestType === 'Late Check-In' || reqData.requestType === 'Forgot Check-In') {
+        record.clockIn = {
+          timestamp: reqData.requestedAt || new Date(),
+          photo: reqData.photo,
+          note: reqData.note || '',
+          location: reqData.location || 'Office',
+          punchType: reqData.requestType,
+        };
+        record.status = 'late';
+        record.exceptionType = reqData.requestType;
+      } else if (reqData.requestType === 'Forgot Check-Out') {
+        const outTime = reqData.requestedAt || new Date();
+        const inTime = record.clockIn?.timestamp ? new Date(record.clockIn.timestamp) : outTime;
+        const diffMs = Math.max(0, outTime - inTime);
+        const totalHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+
+        record.clockOut = {
+          timestamp: outTime,
+          photo: reqData.photo,
+          note: reqData.note || '',
+          location: reqData.location || 'Office',
+          punchType: 'Forgot Check-Out',
+        };
+        record.totalHours = totalHours;
+        record.exceptionType = 'Forgot Check-Out';
+
+        if (totalHours < 4.5 && record.status === 'present') {
+          record.status = 'half-day';
+        }
+      }
+    } else {
+      // If rejected, reset exceptionType so employee's monthly allowance isn't wasted
+      record.exceptionType = 'none';
+    }
+
+    await record.save();
+
+    res.json({
+      success: true,
+      message: `Request ${status} successfully. ${status === 'approved' ? 'Automatic punch completed.' : ''}`,
+      data: record,
+    });
+  } catch (error) {
+    console.error('Review regularize error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

@@ -15,7 +15,9 @@ import {
 
 export default function AdminAttendance() {
   const [records, setRecords] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
   // Filters
@@ -49,9 +51,51 @@ export default function AdminAttendance() {
     }
   };
 
+  const fetchPendingRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const res = await api.get('/attendance/regularize/pending');
+      if (res.data.success) {
+        setPendingRequests(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to load pending regularization requests', err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   useEffect(() => {
     fetchAttendance();
+    fetchPendingRequests();
   }, [dateFilter, departmentFilter, statusFilter]);
+
+  const handleReviewRequest = async (id, status, defaultType = 'Punch') => {
+    const adminRemarks = prompt(
+      status === 'approved'
+        ? `Approve ${defaultType}? Optional remarks for employee:`
+        : `Reject ${defaultType}? Reason for rejection (required):`
+    );
+
+    if (status === 'rejected' && (!adminRemarks || !adminRemarks.trim())) {
+      alert('A reason is required to reject a regularization request.');
+      return;
+    }
+
+    try {
+      const res = await api.put(`/attendance/regularize/${id}/review`, {
+        status,
+        adminRemarks: adminRemarks || '',
+      });
+      if (res.data.success) {
+        alert(res.data.message || `Request ${status} successfully.`);
+        fetchPendingRequests();
+        fetchAttendance();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || err.message || 'Action failed');
+    }
+  };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -125,6 +169,125 @@ export default function AdminAttendance() {
           Export CSV Report
         </button>
       </div>
+
+      {/* Pending Punch Regularization Approvals (Late Check-In / Forgot Check-Out) */}
+      {pendingRequests.length > 0 ? (
+        <div className="bg-gradient-to-r from-neutral-950 via-zinc-950 to-neutral-900 border-2 border-amber-400/40 rounded-3xl p-5 sm:p-6 text-white shadow-xl space-y-4">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+              <h2 className="text-base font-black text-white flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400" />
+                Pending Punch Regularization Requests ({pendingRequests.length})
+              </h2>
+            </div>
+            <span className="text-[11px] text-amber-300 font-semibold bg-amber-400/10 px-3 py-1 rounded-xl border border-amber-400/30">
+              Auto checks-in / out upon approval
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {pendingRequests.map((req) => {
+              const reqData = req.pendingRequest;
+              return (
+                <div
+                  key={req._id}
+                  className="bg-zinc-900/90 border border-white/10 rounded-2xl p-4 flex flex-col justify-between gap-3 shadow-inner"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-300 font-black text-sm shrink-0">
+                        {req.user?.name ? req.user.name.charAt(0) : 'E'}
+                      </div>
+                      <div>
+                        <div className="text-sm font-black text-white">{req.user?.name}</div>
+                        <div className="text-[11px] text-slate-400 font-mono">
+                          {req.user?.employeeId} • {req.user?.department}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                      {reqData?.requestType}
+                    </span>
+                  </div>
+
+                  <div className="bg-black/40 rounded-xl p-3 border border-white/5 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between text-slate-400 text-[11px]">
+                      <span>Date: <strong className="text-white">{req.date}</strong></span>
+                      <span>
+                        Time:{' '}
+                        <strong className="text-white">
+                          {reqData?.requestedAt ? new Date(reqData.requestedAt).toLocaleTimeString() : '—'}
+                        </strong>
+                      </span>
+                    </div>
+                    <div className="text-slate-300">
+                      <span className="text-slate-400 font-semibold">Reason:</span>{' '}
+                      {reqData?.note || 'No explanation note provided'}
+                    </div>
+                    {reqData?.photo && (
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedPhoto({
+                              url: reqData.photo,
+                              title: `${reqData.requestType} Selfie — ${req.user?.name}`,
+                              employee: req.user?.name,
+                              employeeId: req.user?.employeeId,
+                              time: reqData.requestedAt,
+                              date: req.date,
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-400/30 font-bold text-[11px] transition-colors"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          Inspect Selfie Photo
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1 border-t border-white/5">
+                    <button
+                      type="button"
+                      onClick={() => handleReviewRequest(req._id, 'rejected', reqData?.requestType)}
+                      className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-bold transition-all"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleReviewRequest(req._id, 'approved', reqData?.requestType)}
+                      className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-xs transition-all shadow-md flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                      Approve & Auto {reqData?.requestType?.includes('Check-Out') ? 'Check Out' : 'Check In'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-3.5 flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <span className="font-semibold text-slate-700">Punch Regularization Status:</span>
+            <span>All Late & Forgot punch requests are reviewed (0 pending)</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchPendingRequests}
+            disabled={loadingRequests}
+            className="text-amber-700 hover:text-amber-800 font-bold flex items-center gap-1"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingRequests ? 'animate-spin' : ''}`} />
+            Refresh Requests
+          </button>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">

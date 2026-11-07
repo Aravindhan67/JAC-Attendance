@@ -44,6 +44,29 @@ const attendanceSchema = new mongoose.Schema(
       enum: ['none', 'Late Check-In', 'Forgot Check-In', 'Forgot Check-Out'],
       default: 'none',
     },
+    approvalStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
+    },
+    pendingRequest: {
+      requestType: {
+        type: String,
+        enum: ['Late Check-In', 'Forgot Check-In', 'Forgot Check-Out'],
+      },
+      requestedAt: { type: Date },
+      photo: { type: String },
+      note: { type: String, default: '' },
+      location: { type: String, default: 'Office' },
+      status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending',
+      },
+      adminRemarks: { type: String, default: '' },
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      reviewedAt: { type: Date },
+    },
     totalHours: {
       type: Number,
       default: 0, // In decimal hours (e.g. 8.25 hrs)
