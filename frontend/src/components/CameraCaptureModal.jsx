@@ -1,7 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, Image as ImageIcon, MapPin } from 'lucide-react';
+import { Camera, RefreshCw, CheckCircle2, X, AlertTriangle, Image as ImageIcon, MapPin, Clock } from 'lucide-react';
 
-export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionType = 'Clock In' }) {
+export default function CameraCaptureModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  actionType = 'Clock In',
+  isException = false,
+  remainingExceptions = 3,
+}) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
@@ -11,6 +18,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
   const [loading, setLoading] = useState(false);
   const [workMode, setWorkMode] = useState('Office'); // 'Office' | 'WFH' | 'On-site'
   const [note, setNote] = useState('');
+  const [punchType, setPunchType] = useState('Late Check-In');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Start webcam stream when modal opens
@@ -63,16 +71,17 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
     }
   };
 
+  // Capture current webcam frame
   const handleCapture = () => {
     if (!videoRef.current) return;
+
     const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement('canvas');
-
     canvas.width = video.videoWidth || 640;
     canvas.height = video.videoHeight || 480;
 
     const ctx = canvas.getContext('2d');
-    // Mirror the photo for natural selfie feel
+    // Mirror the image horizontally if front facing camera
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -87,7 +96,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
     startCamera();
   };
 
-  const handleFileUploadFallback = (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -103,7 +112,16 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
     if (!capturedPhoto) return;
     setIsSubmitting(true);
     try {
-      await onConfirm({ photo: capturedPhoto, location: workMode, note });
+      await onConfirm({
+        photo: capturedPhoto,
+        location: workMode,
+        note,
+        punchType: isException
+          ? punchType
+          : actionType.includes('Forgot')
+          ? 'Forgot Check-Out'
+          : 'Regular',
+      });
       onClose();
     } catch (err) {
       console.error(err);
@@ -113,6 +131,8 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
   };
 
   if (!isOpen) return null;
+
+  const showExceptionSelector = isException || actionType.includes('Late') || actionType.includes('Forgot');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
@@ -125,7 +145,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
               <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
               {actionType} Photo Verification
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-500">Capture selfie & select work mode</p>
+            <p className="text-[11px] sm:text-xs text-slate-500">Capture selfie & verify work details</p>
           </div>
           <button
             onClick={() => {
@@ -139,7 +159,50 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
         </div>
 
         {/* Viewfinder / Preview Area */}
-        <div className="p-4 sm:p-6 flex flex-col items-center overflow-y-auto">
+        <div className="p-4 sm:p-6 flex flex-col items-center overflow-y-auto space-y-4">
+          
+          {/* Exception Selector if filing late or forgot punch */}
+          {showExceptionSelector && (
+            <div className="w-full p-3.5 bg-amber-50 border border-amber-300/80 rounded-2xl space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-700" />
+                  Select Exception Category
+                </span>
+                <span className="text-[10px] font-black bg-amber-200/90 text-amber-950 px-2.5 py-0.5 rounded-full border border-amber-300">
+                  {remainingExceptions} of 3 allowances left
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPunchType('Late Check-In')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                    punchType === 'Late Check-In'
+                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border-amber-400 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>🕒 Late Check-In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPunchType('Forgot Check-In')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
+                    punchType === 'Forgot Check-In'
+                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border-amber-400 shadow-sm'
+                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>📝 Forgot Check-In</span>
+                </button>
+              </div>
+              <p className="text-[10px] text-amber-900/80">
+                Uses 1 of your 3 monthly exceptions. All 3 allowances refresh automatically on the 1st of every month.
+              </p>
+            </div>
+          )}
+
           <div className="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-amber-400/30">
             {capturedPhoto ? (
               // Captured preview
@@ -161,42 +224,43 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
                     accept="image/*"
                     capture="user"
                     className="hidden"
-                    onChange={handleFileUploadFallback}
+                    onChange={handleFileUpload}
                   />
                 </label>
               </div>
             ) : (
-              // Live camera stream
+              // Live camera feed
               <>
                 <video
                   ref={videoRef}
                   autoPlay
                   playsInline
                   muted
-                  className="w-full h-full object-cover -scale-x-100"
+                  className="w-full h-full object-cover transform -scale-x-100"
                 />
-                {/* Gold face guide overlay */}
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                  <div className="w-48 h-56 border-2 border-dashed border-amber-400/80 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)]" />
-                </div>
-                <div className="absolute top-3 left-3 bg-black/75 text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded-full backdrop-blur-md flex items-center gap-1.5 border border-amber-400/30">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
-                  Live Camera Feed
+                {loading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
+                    Starting Camera...
+                  </div>
+                )}
+                {/* Visual reticle */}
+                <div className="absolute inset-8 border border-white/20 rounded-2xl pointer-events-none flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">
+                    Face Camera Directly
+                  </span>
                 </div>
               </>
             )}
-
-            {/* Hidden canvas for image capture */}
-            <canvas ref={canvasRef} className="hidden" />
           </div>
 
-          {/* Photo Actions */}
-          <div className="mt-4 w-full flex items-center justify-center gap-3">
+          {/* Controls: Capture / Retake */}
+          <div className="flex items-center gap-3">
             {!capturedPhoto ? (
               <button
                 type="button"
                 onClick={handleCapture}
-                disabled={Boolean(cameraError)}
+                disabled={Boolean(cameraError) || loading}
                 className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-black px-6 py-2.5 rounded-xl shadow-md shadow-amber-500/25 hover:shadow-lg flex items-center gap-2 transition-all uppercase tracking-wider text-xs"
               >
                 <Camera className="w-4 h-4 stroke-[2.5]" />
@@ -214,17 +278,17 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
             )}
           </div>
 
-          {/* Work Mode Dropdown (Office, WFH, On-site) & Optional Note */}
-          <div className="w-full mt-4 space-y-3">
+          {/* Work Mode Dropdown & Note / Reason */}
+          <div className="w-full space-y-3">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-indigo-600" />
+                <MapPin className="w-3.5 h-3.5 text-amber-600" />
                 Work Mode / Location
               </label>
               <select
                 value={workMode}
                 onChange={(e) => setWorkMode(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium text-slate-800 cursor-pointer"
+                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800 cursor-pointer"
               >
                 <option value="Office">🏢 Office</option>
                 <option value="WFH">🏠 WFH (Work From Home)</option>
@@ -233,15 +297,15 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">
-                Optional Note {workMode === 'On-site' ? '(e.g. Client name, Studio B shoot)' : '(e.g. remarks)'}
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                {showExceptionSelector ? 'Reason / Explanation (Required for Exception)' : 'Remarks / Note (Optional)'}
               </label>
               <input
                 type="text"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder={workMode === 'On-site' ? 'e.g. Client meeting at location...' : 'Add a remark...'}
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder={showExceptionSelector ? 'e.g. Traffic jam on highway, forgot to punch at 9:30 AM...' : 'Add a remark...'}
+                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
               />
             </div>
           </div>
@@ -270,7 +334,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onConfirm, actionT
             ) : (
               <CheckCircle2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
             )}
-            Confirm & {actionType} ({workMode})
+            Confirm & {showExceptionSelector ? `${punchType}` : actionType}
           </button>
         </div>
 

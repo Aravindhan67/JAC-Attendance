@@ -7,6 +7,7 @@ import { Calendar, Clock, Camera, FileSpreadsheet, ChevronLeft, ChevronRight } f
 export default function MyAttendance() {
   const [records, setRecords] = useState([]);
   const [stats, setStats] = useState(null);
+  const [exceptionQuota, setExceptionQuota] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -19,6 +20,9 @@ export default function MyAttendance() {
       if (res.data.success) {
         setRecords(res.data.data);
         setStats(res.data.stats);
+        if (res.data.exceptionQuota) {
+          setExceptionQuota(res.data.exceptionQuota);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -78,23 +82,43 @@ export default function MyAttendance() {
 
       {/* Summary Banner */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Days Logged</span>
-            <div className="text-xl font-black text-slate-800 mt-0.5">{stats.totalDays}</div>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Days Logged</span>
+              <div className="text-xl font-black text-slate-800 mt-0.5">{stats.totalDays}</div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Present</span>
+              <div className="text-xl font-black text-emerald-600 mt-0.5">{stats.totalPresent}</div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Late Punches</span>
+              <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalLate}</div>
+            </div>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Total Hours</span>
+              <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalHours} hrs</div>
+            </div>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Present</span>
-            <div className="text-xl font-black text-emerald-600 mt-0.5">{stats.totalPresent}</div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Late</span>
-            <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalLate}</div>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Total Hours</span>
-            <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalHours} hrs</div>
-          </div>
+
+          {/* Monthly Late & Forgot Punch Passes Banner */}
+          {exceptionQuota && (
+            <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="font-extrabold text-amber-950">
+                  Late & Forgot Check-In Allowance:
+                </span>
+                <span className="font-bold text-amber-800">
+                  {exceptionQuota.used} of 3 used this month ({exceptionQuota.remaining} remaining)
+                </span>
+              </div>
+              <span className="text-[11px] text-amber-900/70 font-semibold">
+                Refreshes automatically to 3 on the 1st of every month
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -187,7 +211,14 @@ export default function MyAttendance() {
                       )}
                     </td>
                     <td className="py-4 px-6 text-slate-500">
-                      {r.clockIn?.note || r.adminRemark || '—'}
+                      <div className="flex flex-col gap-1 items-start">
+                        {((r.exceptionType && r.exceptionType !== 'none') || (r.clockIn?.punchType && r.clockIn.punchType !== 'Regular')) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-950 border border-amber-300">
+                            {r.exceptionType && r.exceptionType !== 'none' ? r.exceptionType : r.clockIn?.punchType}
+                          </span>
+                        )}
+                        <span>{r.clockIn?.note || r.adminRemark || '—'}</span>
+                      </div>
                     </td>
                   </tr>
                 ))

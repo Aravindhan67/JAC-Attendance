@@ -293,8 +293,15 @@ export default function AdminAttendance() {
                         <span className="text-slate-400 text-[11px]">No Photo</span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-slate-500 italic max-w-xs truncate">
-                      {r.clockIn?.note || r.adminRemark || '—'}
+                    <td className="py-4 px-6 text-slate-500">
+                      <div className="flex flex-col gap-1 items-start">
+                        {((r.exceptionType && r.exceptionType !== 'none') || (r.clockIn?.punchType && r.clockIn.punchType !== 'Regular')) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-950 border border-amber-300">
+                            {r.exceptionType && r.exceptionType !== 'none' ? r.exceptionType : r.clockIn?.punchType}
+                          </span>
+                        )}
+                        <span className="truncate max-w-xs">{r.clockIn?.note || r.adminRemark || '—'}</span>
+                      </div>
                     </td>
                   </tr>
                 ))

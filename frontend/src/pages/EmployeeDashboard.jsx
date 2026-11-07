@@ -23,24 +23,33 @@ export default function EmployeeDashboard() {
   const [todayRecord, setTodayRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [monthStats, setMonthStats] = useState(null);
-  const [modalType, setModalType] = useState(null); // 'Clock In' | 'Clock Out' | null
+  const [modalType, setModalType] = useState(null); // 'Clock In' | 'Clock Out' | 'Late / Forgot Check-In' | 'Forgot Check-Out' | null
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [toast, setToast] = useState(null);
   const [serverRules, setServerRules] = useState({
-    isCheckInClosed: false,
-    isCheckOutClosed: false,
+    isPastCheckInCutoff: false,
+    isPastCheckOutCutoff: false,
+    isCheckInLocked: false,
+    isCheckOutLocked: false,
     checkInCutoff: '09:45 AM',
     checkOutCutoff: '07:00 PM',
+  });
+  const [exceptionQuota, setExceptionQuota] = useState({
+    limit: 3,
+    used: 0,
+    remaining: 3,
+    month: '',
   });
 
   const getPunchWindowStatus = () => {
     const now = new Date();
     const totalMinutes = now.getHours() * 60 + now.getMinutes();
     // 09:45 AM cutoff -> 585 minutes
-    const isPastCheckInCutoff = serverRules.isCheckInClosed || totalMinutes > 9 * 60 + 45;
+    const isPastCheckInCutoff = serverRules.isPastCheckInCutoff || totalMinutes > 9 * 60 + 45;
     // 07:00 PM cutoff -> 1140 minutes
-    const isPastCheckOutCutoff = serverRules.isCheckOutClosed || totalMinutes > 19 * 60;
-    return { isPastCheckInCutoff, isPastCheckOutCutoff };
+    const isPastCheckOutCutoff = serverRules.isPastCheckOutCutoff || totalMinutes > 19 * 60;
+    const hasRemainingExceptions = (exceptionQuota?.remaining ?? 3) > 0;
+    return { isPastCheckInCutoff, isPastCheckOutCutoff, hasRemainingExceptions };
   };
 
   const fetchTodayStatus = async () => {
@@ -50,6 +59,9 @@ export default function EmployeeDashboard() {
         setTodayRecord(res.data.data);
         if (res.data.rules) {
           setServerRules(res.data.rules);
+        }
+        if (res.data.exceptionQuota) {
+          setExceptionQuota(res.data.exceptionQuota);
         }
       }
     } catch (err) {
@@ -78,16 +90,24 @@ export default function EmployeeDashboard() {
     // Listen to center camera trigger from mobile bottom nav
     const handleOpenPunchModal = () => {
       setTodayRecord((currRecord) => {
-        const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
+        const { isPastCheckInCutoff, isPastCheckOutCutoff, hasRemainingExceptions } = getPunchWindowStatus();
         if (!currRecord?.clockIn?.timestamp) {
           if (isPastCheckInCutoff) {
-            showToast('Check-in is not allowed after 09:45 AM. The morning window has closed.', 'error');
+            if (!hasRemainingExceptions) {
+              showToast('Monthly limit of 3 Late / Forgot Check-ins exhausted. Closed until next month.', 'error');
+              return currRecord;
+            }
+            setModalType('Late / Forgot Check-In');
             return currRecord;
           }
           setModalType('Clock In');
         } else if (!currRecord?.clockOut?.timestamp) {
           if (isPastCheckOutCutoff) {
-            showToast('Check-out is not allowed after 07:00 PM. The evening window has closed.', 'error');
+            if (!hasRemainingExceptions) {
+              showToast('Monthly limit of 3 Late / Forgot punch allowances exhausted. Closed until next month.', 'error');
+              return currRecord;
+            }
+            setModalType('Forgot Check-Out');
             return currRecord;
           }
           setModalType('Clock Out');
@@ -98,34 +118,46 @@ export default function EmployeeDashboard() {
 
     window.addEventListener('open-punch-modal', handleOpenPunchModal);
     return () => window.removeEventListener('open-punch-modal', handleOpenPunchModal);
-  }, [serverRules]);
+  }, [serverRules, exceptionQuota]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
 
-  const handleClockAction = async ({ photo, note, location }) => {
-    const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
+  const handleClockAction = async ({ photo, note, location, punchType }) => {
+    const { isPastCheckInCutoff, isPastCheckOutCutoff, hasRemainingExceptions } = getPunchWindowStatus();
 
-    if (modalType === 'Clock In' && isPastCheckInCutoff) {
-      showToast('Check-in is not allowed after 09:45 AM. Punch window closed.', 'error');
+    const isClockInAction = modalType?.includes('Clock In') || modalType?.includes('Check-In');
+
+    if (isClockInAction && isPastCheckInCutoff && !hasRemainingExceptions) {
+      showToast('Monthly limit of 3 Late / Forgot Check-ins exhausted. Closed until next month.', 'error');
       setModalType(null);
       return;
     }
 
-    if (modalType === 'Clock Out' && isPastCheckOutCutoff) {
-      showToast('Check-out is not allowed after 07:00 PM. Punch window closed.', 'error');
+    if (!isClockInAction && isPastCheckOutCutoff && !hasRemainingExceptions) {
+      showToast('Monthly limit of 3 Late / Forgot punch allowances exhausted. Closed until next month.', 'error');
       setModalType(null);
       return;
     }
 
     try {
-      if (modalType === 'Clock In') {
-        const res = await api.post('/attendance/clock-in', { photo, note, location: location || 'Office' });
+      if (isClockInAction) {
+        const res = await api.post('/attendance/clock-in', {
+          photo,
+          note,
+          location: location || 'Office',
+          punchType: isPastCheckInCutoff ? (punchType || 'Late Check-In') : (punchType || 'Regular'),
+        });
         showToast(res.data.message || 'Clocked In Successfully!');
       } else {
-        const res = await api.post('/attendance/clock-out', { photo, note, location: location || 'Office' });
+        const res = await api.post('/attendance/clock-out', {
+          photo,
+          note,
+          location: location || 'Office',
+          punchType: isPastCheckOutCutoff ? 'Forgot Check-Out' : (punchType || 'Regular'),
+        });
         showToast(res.data.message || 'Clocked Out Successfully!');
       }
       await fetchTodayStatus();
@@ -138,7 +170,7 @@ export default function EmployeeDashboard() {
 
   const isClockedIn = Boolean(todayRecord?.clockIn?.timestamp);
   const isClockedOut = Boolean(todayRecord?.clockOut?.timestamp);
-  const { isPastCheckInCutoff, isPastCheckOutCutoff } = getPunchWindowStatus();
+  const { isPastCheckInCutoff, isPastCheckOutCutoff, hasRemainingExceptions } = getPunchWindowStatus();
 
   return (
     <div className="space-y-6">
@@ -179,7 +211,7 @@ export default function EmployeeDashboard() {
             <span className="font-bold text-amber-200">{user?.shiftEndTime || '06:30'} PM</span>. Facial selfie verification active.
             <br />
             <span className="inline-block mt-1 text-[11px] font-semibold text-amber-300/90 bg-amber-500/15 px-2.5 py-0.5 rounded-lg border border-amber-400/25">
-              Strict Timings: Check-in before <span className="font-bold text-white">09:45 AM</span> • Check-out before <span className="font-bold text-white">07:00 PM</span>
+              Shift Timings: Check-in before <span className="font-bold text-white">09:45 AM</span> • Check-out before <span className="font-bold text-white">07:00 PM</span>
             </span>
           </p>
         </div>
@@ -197,6 +229,51 @@ export default function EmployeeDashboard() {
         </div>
       </div>
 
+      {/* Monthly Exception Quota Card: 3 passes for Late / Forgot Punch */}
+      <div className="bg-gradient-to-r from-neutral-950 via-zinc-900 to-black border border-amber-500/30 rounded-3xl p-5 sm:p-6 text-white shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-500/10 border border-amber-400/30 flex items-center justify-center text-amber-400 shrink-0 shadow-inner">
+            <Clock className="w-6 h-6 stroke-[2.2]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-extrabold text-white">Late & Forgot Check-In Allowance</span>
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                {exceptionQuota.month || 'Monthly Quota'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Up to <span className="text-amber-300 font-bold">3 allowances</span> per month for late arrivals (past 9:45 AM) or missed punches. Resets automatically on the 1st.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 bg-black/60 px-4 py-2.5 rounded-2xl border border-white/10 self-stretch sm:self-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-1.5">
+            {[1, 2, 3].map((num) => {
+              const isAvailable = num <= (exceptionQuota.remaining ?? 3);
+              return (
+                <span
+                  key={num}
+                  title={isAvailable ? `Allowance ${num} Available` : `Allowance ${num} Used`}
+                  className={`w-3.5 h-3.5 rounded-full border transition-all ${
+                    isAvailable
+                      ? 'bg-amber-400 border-amber-300 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                      : 'bg-zinc-700 border-zinc-600 opacity-40'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <div className="text-right">
+            <span className="text-sm font-black text-amber-400">
+              {exceptionQuota.remaining ?? 3} / {exceptionQuota.limit ?? 3}
+            </span>
+            <span className="text-[10px] text-slate-400 block font-semibold">passes left</span>
+          </div>
+        </div>
+      </div>
+
       {/* Primary Action Card: Clock In / Clock Out */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:border-amber-400/40 transition-all duration-300">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
@@ -210,26 +287,39 @@ export default function EmployeeDashboard() {
                   Not Marked Yet
                 </span>
               )}
+              {todayRecord?.exceptionType && todayRecord.exceptionType !== 'none' && (
+                <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                  {todayRecord.exceptionType}
+                </span>
+              )}
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1 tracking-tight">
               {!isClockedIn
                 ? isPastCheckInCutoff
-                  ? '⚠️ Check-In Window Closed'
+                  ? hasRemainingExceptions
+                    ? '🕒 Late / Forgot Check-In Available'
+                    : '⚠️ Check-In Closed (Monthly Quota Reached)'
                   : 'Ready to clock in for your shift?'
                 : !isClockedOut
                 ? isPastCheckOutCutoff
-                  ? '⚠️ Check-Out Window Closed'
+                  ? hasRemainingExceptions
+                    ? '🕒 Forgot Check-Out Available'
+                    : '⚠️ Check-Out Closed (Monthly Quota Reached)'
                   : '🟢 Active Shift in Progress'
                 : '✨ Day Completed — Great Work!'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               {!isClockedIn
                 ? isPastCheckInCutoff
-                  ? 'Check-in is only permitted up to 09:45 AM. For regularizing your attendance, please reach out to Admin or HR.'
-                  : 'Click below to snap a quick selfie, select work mode (Office, WFH, On-site) and log punch (cutoff: 09:45 AM).'
+                  ? hasRemainingExceptions
+                    ? `It is past 09:45 AM. You have ${exceptionQuota.remaining} of 3 monthly Late/Forgot Check-In passes remaining. Snap selfie & provide reason.`
+                    : 'You have used all 3 Late / Forgot Check-in allowances for this month. Check-in is locked until the 1st of next month.'
+                  : 'Standard shift check-in active (cutoff: 09:45 AM). Snap selfie to log punch.'
                 : !isClockedOut
                 ? isPastCheckOutCutoff
-                  ? 'Check-out is only permitted up to 07:00 PM. Please reach out to Admin or HR to finalize your shift hours.'
+                  ? hasRemainingExceptions
+                    ? `It is past 07:00 PM. You have ${exceptionQuota.remaining} of 3 monthly allowances available to log your checkout.`
+                    : 'You have used all 3 Late / Forgot punch allowances for this month. Please reach out to Admin or HR.'
                   : 'Your shift is currently active. Snap your selfie when clocking out at end of workday (cutoff: 07:00 PM).'
                 : 'All shift logs and hours have been recorded in the enterprise registry.'}
             </p>
@@ -239,20 +329,31 @@ export default function EmployeeDashboard() {
           <div className="w-full sm:w-auto">
             {!isClockedIn ? (
               isPastCheckInCutoff ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    showToast(
-                      'Check-in is not allowed after 09:45 AM. The daily punch-in window has closed. Please contact Admin or HR.',
-                      'error'
-                    )
-                  }
-                  className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/80 border border-amber-500/30 hover:border-rose-500/50 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide cursor-not-allowed shadow-md"
-                  title="Check-in closed after 09:45 AM"
-                >
-                  <Lock className="w-5 h-5 text-amber-400 stroke-[2.2]" />
-                  Check-In Closed (09:45 AM)
-                </button>
+                hasRemainingExceptions ? (
+                  <button
+                    type="button"
+                    onClick={() => setModalType('Late / Forgot Check-In')}
+                    className="w-full sm:w-auto justify-center bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black px-6 py-3.5 rounded-2xl shadow-lg shadow-amber-500/25 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2.5 text-xs transition-all uppercase tracking-wider"
+                  >
+                    <Clock className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                    <span>Late / Forgot Check-In ({exceptionQuota.remaining}/3 Left)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      showToast(
+                        'Monthly limit of 3 Late / Forgot Check-ins reached. Check-in after 09:45 AM is closed until the 1st of next month.',
+                        'error'
+                      )
+                    }
+                    className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/60 border border-amber-500/20 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-xs transition-all uppercase tracking-wide cursor-not-allowed shadow-md"
+                    title="0 of 3 monthly allowances left"
+                  >
+                    <Lock className="w-4 h-4 text-amber-400 stroke-[2.2]" />
+                    <span>Check-In Closed (3/3 Limit Reached)</span>
+                  </button>
+                )
               ) : (
                 <button
                   type="button"
@@ -265,20 +366,31 @@ export default function EmployeeDashboard() {
               )
             ) : !isClockedOut ? (
               isPastCheckOutCutoff ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    showToast(
-                      'Check-out is not allowed after 07:00 PM. The daily punch-out window has closed. Please contact Admin or HR.',
-                      'error'
-                    )
-                  }
-                  className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/80 border border-amber-500/30 hover:border-rose-500/50 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-sm transition-all duration-200 uppercase tracking-wide cursor-not-allowed shadow-md"
-                  title="Check-out closed after 07:00 PM"
-                >
-                  <Lock className="w-5 h-5 text-amber-400 stroke-[2.2]" />
-                  Check-Out Closed (07:00 PM)
-                </button>
+                hasRemainingExceptions ? (
+                  <button
+                    type="button"
+                    onClick={() => setModalType('Forgot Check-Out')}
+                    className="w-full sm:w-auto justify-center bg-gradient-to-r from-neutral-900 via-zinc-900 to-black hover:from-black hover:to-neutral-900 text-amber-300 border-2 border-amber-400/50 font-black px-6 py-3.5 rounded-2xl shadow-lg shadow-black/40 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2.5 text-xs transition-all uppercase tracking-wider"
+                  >
+                    <Clock className="w-4 h-4 text-amber-400 stroke-[2.5]" />
+                    <span>Forgot Check-Out ({exceptionQuota.remaining}/3 Left)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      showToast(
+                        'Monthly limit of 3 Late / Forgot punch allowances reached. Check-out after 07:00 PM is closed.',
+                        'error'
+                      )
+                    }
+                    className="w-full sm:w-auto justify-center bg-zinc-900 text-amber-300/60 border border-amber-500/20 font-bold px-7 py-3.5 rounded-2xl flex items-center gap-3 text-xs transition-all uppercase tracking-wide cursor-not-allowed shadow-md"
+                    title="0 of 3 monthly allowances left"
+                  >
+                    <Lock className="w-4 h-4 text-amber-400 stroke-[2.2]" />
+                    <span>Check-Out Closed (3/3 Limit Reached)</span>
+                  </button>
+                )
               ) : (
                 <button
                   type="button"
@@ -448,6 +560,12 @@ export default function EmployeeDashboard() {
       <CameraCaptureModal
         isOpen={Boolean(modalType)}
         actionType={modalType}
+        isException={
+          modalType?.includes('Late') ||
+          modalType?.includes('Forgot') ||
+          (modalType === 'Clock In' && isPastCheckInCutoff)
+        }
+        remainingExceptions={exceptionQuota?.remaining ?? 3}
         onClose={() => setModalType(null)}
         onConfirm={handleClockAction}
       />

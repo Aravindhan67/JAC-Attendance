@@ -17,17 +17,32 @@ const attendanceSchema = new mongoose.Schema(
       photo: { type: String }, // path or base64 data url
       note: { type: String, default: '' },
       location: { type: String, default: 'Office' },
+      punchType: {
+        type: String,
+        enum: ['Regular', 'Late Check-In', 'Forgot Check-In'],
+        default: 'Regular',
+      },
     },
     clockOut: {
       timestamp: { type: Date },
       photo: { type: String },
       note: { type: String, default: '' },
       location: { type: String, default: 'Office' },
+      punchType: {
+        type: String,
+        enum: ['Regular', 'Forgot Check-Out'],
+        default: 'Regular',
+      },
     },
     status: {
       type: String,
       enum: ['present', 'late', 'half-day', 'absent', 'leave'],
       default: 'present',
+    },
+    exceptionType: {
+      type: String,
+      enum: ['none', 'Late Check-In', 'Forgot Check-In', 'Forgot Check-Out'],
+      default: 'none',
     },
     totalHours: {
       type: Number,
