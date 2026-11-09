@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
+import IndividualReportModal from '../components/IndividualReportModal';
 import {
   Users,
   UserPlus,
@@ -14,6 +15,7 @@ import {
   Mail,
   Briefcase,
   Clock,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export default function AdminEmployees() {
@@ -25,6 +27,7 @@ export default function AdminEmployees() {
   const [toast, setToast] = useState(null);
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [reportModalData, setReportModalData] = useState({ isOpen: false, employee: null });
 
   // Form fields
   const [formData, setFormData] = useState({
@@ -163,23 +166,36 @@ export default function AdminEmployees() {
         </div>
       )}
 
-      {/* Header & Add Button */}
+      {/* Header & Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800">Staff Management</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Add team members, assign shift timings, and manage departments
+            Add team members, assign shift timings, and export individual attendance reports
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 flex items-center gap-2 transition-all self-start sm:self-auto uppercase tracking-wider"
-        >
-          <UserPlus className="w-4 h-4 stroke-[3]" />
-          Add Employee
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Individual Excel Report Generator */}
+          <button
+            type="button"
+            onClick={() => setReportModalData({ isOpen: true, employee: null })}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-900/10 flex items-center gap-2 transition-all active:scale-95"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            Individual Excel Report
+          </button>
+
+          {/* Add Employee Button */}
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 flex items-center gap-2 transition-all uppercase tracking-wider active:scale-95"
+          >
+            <UserPlus className="w-4 h-4 stroke-[3]" />
+            Add Employee
+          </button>
+        </div>
       </div>
 
       {/* Search Input */}
@@ -261,6 +277,15 @@ export default function AdminEmployees() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Download Individual Excel Report */}
+                        <button
+                          type="button"
+                          onClick={() => setReportModalData({ isOpen: true, employee: emp })}
+                          className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title={`Generate Attendance Excel Report for ${emp.name}`}
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(emp)}
@@ -515,6 +540,15 @@ export default function AdminEmployees() {
 
           </div>
         </div>
+      )}
+
+      {/* Individual Employee Attendance Excel Report Modal */}
+      {reportModalData.isOpen && (
+        <IndividualReportModal
+          isOpen={reportModalData.isOpen}
+          initialEmployee={reportModalData.employee}
+          onClose={() => setReportModalData({ isOpen: false, employee: null })}
+        />
       )}
 
     </div>

@@ -10,6 +10,7 @@ const {
   updateAttendance,
   getPendingRegularizeRequests,
   reviewRegularizeRequest,
+  getEmployeeAttendanceReport,
 } = require('../controllers/attendanceController');
 const { protect, requireAdmin } = require('../middleware/authMiddleware');
 
@@ -21,6 +22,7 @@ router.get('/my-history', protect, getMyHistory);
 
 // Admin routes
 router.get('/all', protect, requireAdmin, getAllAttendance);
+router.get('/report/employee/:userId', protect, requireAdmin, getEmployeeAttendanceReport);
 router.get('/today-feed', protect, requireAdmin, getTodayFeed);
 router.get('/regularize/pending', protect, requireAdmin, getPendingRegularizeRequests);
 router.put('/regularize/:id/review', protect, requireAdmin, reviewRegularizeRequest);

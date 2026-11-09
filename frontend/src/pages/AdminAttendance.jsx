@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import PhotoModal from '../components/PhotoModal';
+import IndividualReportModal from '../components/IndividualReportModal';
 import {
   Calendar,
   Search,
@@ -16,6 +17,7 @@ import {
   AlertCircle,
   ShieldCheck,
   Edit3,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 export default function AdminAttendance() {
@@ -25,6 +27,7 @@ export default function AdminAttendance() {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [notification, setNotification] = useState(null);
+  const [reportModal, setReportModal] = useState({ isOpen: false, employee: null });
 
   // Review & Action Modal State
   const [actionModal, setActionModal] = useState({
@@ -229,18 +232,31 @@ export default function AdminAttendance() {
         <div>
           <h1 className="text-2xl font-black text-slate-800">Attendance Master Sheet</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Audit daily employee punches, verification selfies, and approve/reject late arrivals
+            Audit daily employee punches, verification selfies, and export individual employee Excel reports
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={exportToCSV}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-200 flex items-center gap-2 transition-all self-start sm:self-auto"
-        >
-          <Download className="w-4 h-4" />
-          Export CSV Report
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Individual Employee Excel Report Generator */}
+          <button
+            type="button"
+            onClick={() => setReportModal({ isOpen: true, employee: null })}
+            className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-900/10 flex items-center gap-2 transition-all active:scale-95"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            Individual Excel Report
+          </button>
+
+          {/* Daily CSV Export */}
+          <button
+            type="button"
+            onClick={exportToCSV}
+            className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md flex items-center gap-2 transition-all self-start sm:self-auto"
+          >
+            <Download className="w-4 h-4 text-slate-300" />
+            Export Daily CSV
+          </button>
+        </div>
       </div>
 
       {/* Pending Punch Regularization Approvals (Late Check-In / Forgot Check-Out) */}
@@ -477,9 +493,23 @@ export default function AdminAttendance() {
                   return (
                     <tr key={r._id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-4 px-6">
-                        <div className="font-bold text-slate-800">{r.user?.name || 'Unknown'}</div>
-                        <div className="text-[11px] text-slate-400 font-mono">
-                          {r.user?.employeeId || '—'}
+                        <div className="flex items-center justify-between gap-2">
+                          <div>
+                            <div className="font-bold text-slate-800">{r.user?.name || 'Unknown'}</div>
+                            <div className="text-[11px] text-slate-400 font-mono">
+                              {r.user?.employeeId || '—'}
+                            </div>
+                          </div>
+                          {r.user && (
+                            <button
+                              type="button"
+                              title={`Generate Individual Excel Report for ${r.user.name}`}
+                              onClick={() => setReportModal({ isOpen: true, employee: r.user })}
+                              className="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors"
+                            >
+                              <FileSpreadsheet className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-600">
@@ -778,6 +808,15 @@ export default function AdminAttendance() {
 
           </div>
         </div>
+      )}
+
+      {/* Individual Employee Excel Report Modal */}
+      {reportModal.isOpen && (
+        <IndividualReportModal
+          isOpen={reportModal.isOpen}
+          initialEmployee={reportModal.employee}
+          onClose={() => setReportModal({ isOpen: false, employee: null })}
+        />
       )}
 
       {/* Photo Inspector Modal */}

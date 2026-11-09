@@ -604,3 +604,95 @@ exports.reviewRegularizeRequest = async (req, res) => {
   }
 };
 
+// @desc Admin: Get individual employee attendance report with breakdown & stats
+// @route GET /api/attendance/report/employee/:userId
+exports.getEmployeeAttendanceReport = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { startDate, endDate, month } = req.query;
+
+    const employee = await User.findById(userId).select('-password');
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    const query = { user: userId };
+    if (startDate && endDate) {
+      query.date = { $gte: startDate, $lte: endDate };
+    } else if (month) {
+      query.date = { $regex: `^${month}` };
+    }
+
+    const records = await Attendance.find(query).sort({ date: 1 });
+
+    // Fetch approved leaves during this period
+    let leaves = [];
+    try {
+      const Leave = require('../models/Leave');
+      const leaveQuery = { user: userId, status: 'approved' };
+      if (startDate && endDate) {
+        leaveQuery.$or = [
+          {
+            startDate: { $lte: new Date(`${endDate}T23:59:59.999Z`) },
+            endDate: { $gte: new Date(`${startDate}T00:00:00.000Z`) },
+          },
+        ];
+      } else if (month) {
+        const [yearStr, monthStr] = month.split('-');
+        const y = parseInt(yearStr, 10);
+        const m = parseInt(monthStr, 10) - 1;
+        const startOfMonth = new Date(y, m, 1);
+        const endOfMonth = new Date(y, m + 1, 0, 23, 59, 59, 999);
+        leaveQuery.$or = [
+          { startDate: { $lte: endOfMonth }, endDate: { $gte: startOfMonth } },
+        ];
+      }
+      leaves = await Leave.find(leaveQuery).sort({ startDate: 1 });
+    } catch (e) {
+      console.warn('Leaves fetch warning:', e.message);
+    }
+
+    // Aggregated statistics
+    const totalDays = records.length;
+    const totalPresent = records.filter((r) => r.status === 'present').length;
+    const totalLate = records.filter((r) => r.status === 'late').length;
+    const totalHalfDay = records.filter((r) => r.status === 'half-day').length;
+    const totalAbsent = records.filter((r) => r.status === 'absent').length;
+    const totalHours = records.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
+    const avgDailyHours = totalDays > 0 ? Math.round((totalHours / totalDays) * 100) / 100 : 0;
+    const totalExceptions = records.filter(
+      (r) =>
+        r.exceptionType === 'Late Check-In' ||
+        r.exceptionType === 'Forgot Check-In' ||
+        r.exceptionType === 'Forgot Check-Out' ||
+        r.clockIn?.punchType === 'Late Check-In' ||
+        r.clockIn?.punchType === 'Forgot Check-In' ||
+        r.clockOut?.punchType === 'Forgot Check-Out'
+    ).length;
+
+    res.json({
+      success: true,
+      data: {
+        employee,
+        records,
+        leaves,
+        summary: {
+          totalDays,
+          totalPresent,
+          totalLate,
+          totalHalfDay,
+          totalAbsent,
+          totalLeaves: leaves.length,
+          totalHours: Math.round(totalHours * 100) / 100,
+          avgDailyHours,
+          totalExceptions,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('getEmployeeAttendanceReport error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
