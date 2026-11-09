@@ -10,10 +10,15 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  Clock,
-  Briefcase,
-  ChevronRight,
 } from 'lucide-react';
+
+// Helper to format date as YYYY-MM-DD in local time without UTC offset drift
+const formatDateLocal = (date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
 
 export default function IndividualReportModal({
   isOpen,
@@ -23,19 +28,16 @@ export default function IndividualReportModal({
   const [employees, setEmployees] = useState([]);
   const [selectedEmpId, setSelectedEmpId] = useState('');
   const [rangePreset, setRangePreset] = useState('this-month'); // 'this-month' | 'last-month' | 'last-30' | 'custom'
-  
-  // Custom Date range
+
+  // Default dates: First day of current month to Last day of current month in local time
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth(); // 0-indexed
-  
-  const defaultStartDate = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
-  const defaultEndDate = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
-  
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
-  
-  // Preview / report data
+  const currentMonth = now.getMonth();
+
+  const [startDate, setStartDate] = useState(formatDateLocal(new Date(currentYear, currentMonth, 1)));
+  const [endDate, setEndDate] = useState(formatDateLocal(new Date(currentYear, currentMonth + 1, 0)));
+
+  // Report & preview data
   const [reportData, setReportData] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -64,7 +66,7 @@ export default function IndividualReportModal({
     loadEmployees();
   }, [isOpen, initialEmployee]);
 
-  // Handle Preset Changes
+  // Handle Preset Changes in local timezone
   const handlePresetChange = (preset) => {
     setRangePreset(preset);
     const today = new Date();
@@ -72,26 +74,20 @@ export default function IndividualReportModal({
     const m = today.getMonth();
 
     if (preset === 'this-month') {
-      const start = new Date(y, m, 1).toISOString().split('T')[0];
-      const end = new Date(y, m + 1, 0).toISOString().split('T')[0];
-      setStartDate(start);
-      setEndDate(end);
+      setStartDate(formatDateLocal(new Date(y, m, 1)));
+      setEndDate(formatDateLocal(new Date(y, m + 1, 0)));
     } else if (preset === 'last-month') {
-      const start = new Date(y, m - 1, 1).toISOString().split('T')[0];
-      const end = new Date(y, m, 0).toISOString().split('T')[0];
-      setStartDate(start);
-      setEndDate(end);
+      setStartDate(formatDateLocal(new Date(y, m - 1, 1)));
+      setEndDate(formatDateLocal(new Date(y, m, 0)));
     } else if (preset === 'last-30') {
-      const end = today.toISOString().split('T')[0];
       const prevDate = new Date();
       prevDate.setDate(today.getDate() - 30);
-      const start = prevDate.toISOString().split('T')[0];
-      setStartDate(start);
-      setEndDate(end);
+      setStartDate(formatDateLocal(prevDate));
+      setEndDate(formatDateLocal(today));
     }
   };
 
-  // Fetch preview data whenever employee or dates change
+  // Fetch preview data with automatic fallback to /attendance/all
   useEffect(() => {
     if (!isOpen || !selectedEmpId || !startDate || !endDate) return;
 
@@ -99,16 +95,81 @@ export default function IndividualReportModal({
     const fetchPreview = async () => {
       setLoadingPreview(true);
       setErrorMsg('');
+
+      const emp = employees.find((e) => e._id === selectedEmpId) || initialEmployee;
+
       try {
+        // Primary Attempt: Try dedicated individual report endpoint
         const res = await api.get(
           `/attendance/report/employee/${selectedEmpId}?startDate=${startDate}&endDate=${endDate}`
         );
         if (isMounted && res.data.success) {
           setReportData(res.data.data);
+          return;
         }
-      } catch (err) {
-        if (isMounted) {
-          setErrorMsg(err.response?.data?.message || 'Failed to fetch attendance preview data');
+      } catch (primaryErr) {
+        // Fallback: If dedicated endpoint is 404 (e.g. backend still deploying), fetch from /attendance/all and aggregate
+        try {
+          const allRes = await api.get(`/attendance/all`);
+          if (isMounted && allRes.data.success) {
+            const allRecords = allRes.data.data || [];
+            
+            // Filter by selected employee and date range
+            const filtered = allRecords.filter((r) => {
+              const matchesUser =
+                r.user?._id === selectedEmpId ||
+                r.user?.employeeId === emp?.employeeId;
+              const matchesDate = r.date >= startDate && r.date <= endDate;
+              return matchesUser && matchesDate;
+            });
+
+            // Sort ascending by date
+            filtered.sort((a, b) => (a.date > b.date ? 1 : -1));
+
+            // Aggregate metrics
+            const totalDays = filtered.length;
+            const totalPresent = filtered.filter((r) => r.status === 'present').length;
+            const totalLate = filtered.filter((r) => r.status === 'late').length;
+            const totalHalfDay = filtered.filter((r) => r.status === 'half-day').length;
+            const totalAbsent = filtered.filter((r) => r.status === 'absent').length;
+            const totalHours = filtered.reduce((acc, curr) => acc + (curr.totalHours || 0), 0);
+            const avgDailyHours = totalDays > 0 ? Math.round((totalHours / totalDays) * 100) / 100 : 0;
+            const totalExceptions = filtered.filter(
+              (r) =>
+                r.exceptionType === 'Late Check-In' ||
+                r.exceptionType === 'Forgot Check-In' ||
+                r.exceptionType === 'Forgot Check-Out' ||
+                r.clockIn?.punchType === 'Late Check-In' ||
+                r.clockIn?.punchType === 'Forgot Check-In' ||
+                r.clockOut?.punchType === 'Forgot Check-Out'
+            ).length;
+
+            setReportData({
+              employee: emp,
+              records: filtered,
+              leaves: [],
+              summary: {
+                totalDays,
+                totalPresent,
+                totalLate,
+                totalHalfDay,
+                totalAbsent,
+                totalLeaves: 0,
+                totalHours: Math.round(totalHours * 100) / 100,
+                avgDailyHours,
+                totalExceptions,
+              },
+            });
+            return;
+          }
+        } catch (fallbackErr) {
+          if (isMounted) {
+            setErrorMsg(
+              fallbackErr.response?.data?.message ||
+              primaryErr.response?.data?.message ||
+              'Failed to fetch attendance data'
+            );
+          }
         }
       } finally {
         if (isMounted) setLoadingPreview(false);
@@ -119,12 +180,13 @@ export default function IndividualReportModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, selectedEmpId, startDate, endDate]);
+  }, [isOpen, selectedEmpId, startDate, endDate, employees]);
 
   // Download Excel
   const handleDownloadExcel = async () => {
-    if (!reportData || !reportData.employee) {
-      setErrorMsg('No data available to generate report');
+    const currentEmp = reportData?.employee || employees.find((e) => e._id === selectedEmpId);
+    if (!currentEmp) {
+      setErrorMsg('Please select an employee first.');
       return;
     }
 
@@ -132,18 +194,30 @@ export default function IndividualReportModal({
     try {
       let label = `${startDate} to ${endDate}`;
       if (rangePreset === 'this-month') {
-        const monthName = new Date(startDate).toLocaleString('en-US', { month: 'short', year: 'numeric' });
-        label = monthName;
+        const [y, m] = startDate.split('-');
+        const monthDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+        label = monthDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       } else if (rangePreset === 'last-month') {
-        const monthName = new Date(startDate).toLocaleString('en-US', { month: 'short', year: 'numeric' });
-        label = monthName;
+        const [y, m] = startDate.split('-');
+        const monthDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, 1);
+        label = monthDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       }
 
       exportIndividualEmployeeExcel({
-        employee: reportData.employee,
-        records: reportData.records || [],
-        summary: reportData.summary || {},
-        leaves: reportData.leaves || [],
+        employee: currentEmp,
+        records: reportData?.records || [],
+        summary: reportData?.summary || {
+          totalDays: reportData?.records?.length || 0,
+          totalPresent: (reportData?.records || []).filter((r) => r.status === 'present').length,
+          totalLate: (reportData?.records || []).filter((r) => r.status === 'late').length,
+          totalHalfDay: (reportData?.records || []).filter((r) => r.status === 'half-day').length,
+          totalAbsent: (reportData?.records || []).filter((r) => r.status === 'absent').length,
+          totalLeaves: 0,
+          totalHours: (reportData?.records || []).reduce((acc, curr) => acc + (curr.totalHours || 0), 0),
+          avgDailyHours: 0,
+          totalExceptions: 0,
+        },
+        leaves: reportData?.leaves || [],
         period: {
           startDate,
           endDate,
@@ -369,7 +443,7 @@ export default function IndividualReportModal({
           
           <button
             type="button"
-            disabled={generating || loadingPreview || !reportData}
+            disabled={generating || loadingPreview || !currentEmployee}
             onClick={handleDownloadExcel}
             className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs shadow-md shadow-emerald-200 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >

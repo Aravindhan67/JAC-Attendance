@@ -439,11 +439,13 @@ exports.getMyHistory = async (req, res) => {
 // @route GET /api/attendance/all
 exports.getAllAttendance = async (req, res) => {
   try {
-    const { date, month, department, employeeId, status } = req.query;
+    const { date, month, startDate, endDate, department, employeeId, status } = req.query;
     const filter = {};
 
     if (date) {
       filter.date = date;
+    } else if (startDate && endDate) {
+      filter.date = { $gte: startDate, $lte: endDate };
     } else if (month) {
       filter.date = { $regex: `^${month}` }; // e.g. "2026-11"
     }
