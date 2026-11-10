@@ -33,6 +33,10 @@ connectDB().then(async (isConnected) => {
 
 // Allowed frontend origins for CORS
 const allowedOrigins = [
+  'https://emp.jacmedialand.com',
+  'http://emp.jacmedialand.com',
+  'https://jacmedialand.com',
+  'http://jacmedialand.com',
   'https://jacattendance-delta.vercel.app',
   'http://localhost:3000',
   'http://localhost:5173',
@@ -46,6 +50,8 @@ app.use((req, res, next) => {
     if (
       allowedOrigins.includes(origin) ||
       origin.endsWith('.vercel.app') ||
+      origin.endsWith('jacmedialand.com') ||
+      /^https?:\/\/([a-zA-Z0-9-]+\.)*jacmedialand\.com(:\d+)?$/.test(origin) ||
       /^https?:\/\/localhost(:\d+)?$/.test(origin)
     ) {
       res.setHeader('Access-Control-Allow-Origin', origin);
