@@ -46,7 +46,14 @@ export default function PhotoModal({ photoUrl, title, meta, onClose }) {
             {meta.time && (
               <span className="flex items-center gap-1.5 text-[#5A5347] font-medium font-mono text-[11px]">
                 <Clock className="w-3.5 h-3.5 text-[#8A8274]" />
-                {new Date(meta.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                {(() => {
+                  try {
+                    const d = new Date(meta.time);
+                    return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  } catch {
+                    return '—';
+                  }
+                })()}
               </span>
             )}
             {meta.date && (

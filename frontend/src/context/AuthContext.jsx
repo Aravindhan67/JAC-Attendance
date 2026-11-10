@@ -4,9 +4,16 @@ import api from '../api/client';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(localStorage.getItem('token')) && !localStorage.getItem('user'));
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -15,10 +22,13 @@ export const AuthProvider = ({ children }) => {
           const res = await api.get('/auth/me');
           if (res.data && res.data.user) {
             setUser(res.data.user);
+            localStorage.setItem('user', JSON.stringify(res.data.user));
           }
         } catch (error) {
-          console.error('Session restoration failed:', error);
-          logout();
+          console.error('Session verification notice:', error);
+          if (error.response?.status === 401) {
+            logout();
+          }
         }
       }
       setLoading(false);

@@ -5,19 +5,40 @@ import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import LogoLoading from './components/LogoLoading';
+import ErrorBoundary from './components/ErrorBoundary';
 
-// Lazy-loaded route chunks to slash initial bundle size and boost Lighthouse score
-const Login = lazy(() => import('./pages/Login'));
-const EmployeeDashboard = lazy(() => import('./pages/EmployeeDashboard'));
-const MyAttendance = lazy(() => import('./pages/MyAttendance'));
-const MyLeaves = lazy(() => import('./pages/MyLeaves'));
-const MyTasks = lazy(() => import('./pages/MyTasks'));
-const Profile = lazy(() => import('./pages/Profile'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const AdminAttendance = lazy(() => import('./pages/AdminAttendance'));
-const AdminLeaves = lazy(() => import('./pages/AdminLeaves'));
-const AdminEmployees = lazy(() => import('./pages/AdminEmployees'));
-const AdminTasks = lazy(() => import('./pages/AdminTasks'));
+// Resilient dynamic import that auto-reloads if a new deployment changed the chunk hashes
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const hasRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-chunk-refresh') || 'false'
+    );
+    try {
+      const module = await componentImport();
+      window.sessionStorage.setItem('page-chunk-refresh', 'false');
+      return module;
+    } catch (err) {
+      if (!hasRefreshed) {
+        window.sessionStorage.setItem('page-chunk-refresh', 'true');
+        window.location.reload();
+        return new Promise(() => {}); // Wait for reload
+      }
+      throw err;
+    }
+  });
+
+// Lazy-loaded route chunks with deployment recovery
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const EmployeeDashboard = lazyWithRetry(() => import('./pages/EmployeeDashboard'));
+const MyAttendance = lazyWithRetry(() => import('./pages/MyAttendance'));
+const MyLeaves = lazyWithRetry(() => import('./pages/MyLeaves'));
+const MyTasks = lazyWithRetry(() => import('./pages/MyTasks'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
+const AdminAttendance = lazyWithRetry(() => import('./pages/AdminAttendance'));
+const AdminLeaves = lazyWithRetry(() => import('./pages/AdminLeaves'));
+const AdminEmployees = lazyWithRetry(() => import('./pages/AdminEmployees'));
+const AdminTasks = lazyWithRetry(() => import('./pages/AdminTasks'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -51,103 +72,105 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Suspense fallback={<LogoLoading message="Loading workspace..." />}>
-          <Routes>
-          {/* Public Auth Route */}
-          <Route path="/login" element={<Login />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Suspense fallback={<LogoLoading message="Loading workspace..." />}>
+            <Routes>
+              {/* Public Auth Route */}
+              <Route path="/login" element={<Login />} />
 
-          {/* Employee Routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <EmployeeDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <ProtectedRoute>
-                <MyTasks />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-attendance"
-            element={
-              <ProtectedRoute>
-                <MyAttendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-leaves"
-            element={
-              <ProtectedRoute>
-                <MyLeaves />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
+              {/* Employee Routes */}
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <EmployeeDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute>
+                    <MyTasks />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-attendance"
+                element={
+                  <ProtectedRoute>
+                    <MyAttendance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-leaves"
+                element={
+                  <ProtectedRoute>
+                    <MyLeaves />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/tasks"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminTasks />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/attendance"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminAttendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/leaves"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminLeaves />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/employees"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminEmployees />
-              </ProtectedRoute>
-            }
-          />
+              {/* Admin Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/tasks"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminTasks />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/attendance"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminAttendance />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/leaves"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminLeaves />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/employees"
+                element={
+                  <ProtectedRoute requireAdmin={true}>
+                    <AdminEmployees />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Catch-all fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
-  </AuthProvider>
+              {/* Catch-all fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

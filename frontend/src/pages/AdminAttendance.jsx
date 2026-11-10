@@ -51,6 +51,17 @@ export default function AdminAttendance() {
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
 
+  const formatTimeSafe = (timestamp) => {
+    if (!timestamp) return '—';
+    try {
+      const d = new Date(timestamp);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '—';
+    }
+  };
+
   const showToast = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => {
@@ -551,20 +562,10 @@ export default function AdminAttendance() {
                         </div>
                       </td>
                       <td className="py-4 px-4 text-slate-700 font-mono font-medium">
-                        {r.clockIn?.timestamp
-                          ? new Date(r.clockIn.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
+                        {formatTimeSafe(r.clockIn?.timestamp)}
                       </td>
                       <td className="py-4 px-4 text-slate-700 font-mono font-medium">
-                        {r.clockOut?.timestamp
-                          ? new Date(r.clockOut.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
+                        {formatTimeSafe(r.clockOut?.timestamp)}
                       </td>
                       <td className="py-4 px-4 font-bold text-slate-800">
                         {r.totalHours > 0 ? `${r.totalHours} hrs` : '—'}

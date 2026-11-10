@@ -21,6 +21,17 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
+  const formatTimeSafe = (timestamp) => {
+    if (!timestamp) return '—';
+    try {
+      const d = new Date(timestamp);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return '—';
+    }
+  };
+
   const fetchDashboard = async () => {
     try {
       const res = await api.get('/dashboard/admin');
@@ -218,17 +229,17 @@ export default function AdminDashboard() {
                         onClick={() =>
                           setSelectedPhoto({
                             url: clockInPhoto,
-                            title: `Clock-In: ${rec.user?.name}`,
-                            employee: rec.user?.name,
-                            employeeId: rec.user?.employeeId,
-                            time: rec.clockIn.timestamp,
+                            title: `Clock-In: ${rec.user?.name || 'Staff'}`,
+                            employee: rec.user?.name || 'Staff',
+                            employeeId: rec.user?.employeeId || '—',
+                            time: rec.clockIn?.timestamp,
                           })
                         }
                         className="w-full h-full relative cursor-pointer overflow-hidden"
                       >
                         <img
                           src={getPhotoUrl(clockInPhoto)}
-                          alt={rec.user?.name}
+                          alt={rec.user?.name || 'Employee'}
                           className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute inset-0 bg-[#23201B]/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[#FAF6EE] text-[11px] font-bold transition-opacity backdrop-blur-[2px]">
@@ -255,25 +266,20 @@ export default function AdminDashboard() {
                   <div>
                     <div className="flex items-center justify-between">
                       <h4 className="font-bold text-[#23201B] text-xs truncate">
-                        {rec.user?.name}
+                        {rec.user?.name || 'Staff Member'}
                       </h4>
                       <span className="text-[10px] font-bold text-[#8A8274]">
-                        {rec.user?.employeeId}
+                        {rec.user?.employeeId || '—'}
                       </span>
                     </div>
                     <div className="text-[11px] text-[#5A5347] truncate">
-                      {rec.user?.department}
+                      {rec.user?.department || 'General'}
                     </div>
 
                     <div className="mt-3 pt-3 border-t border-[#DCD4C4] flex items-center justify-between text-[11px] text-[#5A5347]">
                       <span>Clock In:</span>
                       <span className="font-bold text-[#23201B] font-mono">
-                        {rec.clockIn?.timestamp
-                          ? new Date(rec.clockIn.timestamp).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : '—'}
+                        {formatTimeSafe(rec.clockIn?.timestamp)}
                       </span>
                     </div>
 
@@ -281,10 +287,7 @@ export default function AdminDashboard() {
                       <div className="flex items-center justify-between text-[11px] text-[#5A5347] mt-1">
                         <span>Clock Out:</span>
                         <span className="font-bold text-[#23201B] font-mono">
-                          {new Date(rec.clockOut.timestamp).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatTimeSafe(rec.clockOut.timestamp)}
                         </span>
                       </div>
                     )}
