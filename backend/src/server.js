@@ -43,6 +43,18 @@ const allowedOrigins = [
   'http://localhost:5000',
 ];
 
+// Dynamically include CLIENT_URL or FRONTEND_URL from environment variables if defined
+[process.env.CLIENT_URL, process.env.FRONTEND_URL].forEach((envVal) => {
+  if (envVal) {
+    envVal.split(',').forEach((url) => {
+      const cleanUrl = url.trim().replace(/\/$/, '');
+      if (cleanUrl && !allowedOrigins.includes(cleanUrl)) {
+        allowedOrigins.push(cleanUrl);
+      }
+    });
+  }
+});
+
 // Comprehensive CORS Middleware with explicit header reflection & preflight handling
 app.use((req, res, next) => {
   const origin = req.headers.origin;
