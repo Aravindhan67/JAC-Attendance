@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import IndividualReportModal from '../components/IndividualReportModal';
+import ManualCheckInModal from '../components/ManualCheckInModal';
 import {
   Users,
   UserPlus,
@@ -17,6 +18,7 @@ import {
   Clock,
   FileSpreadsheet,
   Filter,
+  UserCheck,
 } from 'lucide-react';
 
 export default function AdminEmployees() {
@@ -30,6 +32,7 @@ export default function AdminEmployees() {
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [reportModalData, setReportModalData] = useState({ isOpen: false, employee: null });
+  const [manualModal, setManualModal] = useState({ isOpen: false, employee: null });
 
   // Form fields
   const [formData, setFormData] = useState({
@@ -182,6 +185,16 @@ export default function AdminEmployees() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Manual Attendance Check-In */}
+          <button
+            type="button"
+            onClick={() => setManualModal({ isOpen: true, employee: null })}
+            className="bg-[#FAF6EE] hover:bg-[#EAE4D6] text-[#1B3B34] text-xs font-bold px-4 py-2.5 rounded-xl shadow-warm-sm flex items-center gap-2 transition-all active:scale-95 border border-[#DCD4C4]"
+          >
+            <UserCheck className="w-4 h-4 text-[#1B3B34]" />
+            Manual Check-In
+          </button>
+
           {/* Individual Excel Report Generator */}
           <button
             type="button"
@@ -313,6 +326,16 @@ export default function AdminEmployees() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Quick Manual Check-In Button */}
+                        <button
+                          type="button"
+                          onClick={() => setManualModal({ isOpen: true, employee: emp })}
+                          className="p-1.5 text-[#1B3B34] hover:text-[#254F46] hover:bg-[#EAE4D6] rounded-lg transition-colors"
+                          title={`Record Manual Attendance for ${emp.name}`}
+                        >
+                          <UserCheck className="w-4 h-4 stroke-[2.2]" />
+                        </button>
+
                         {/* Download Individual Excel Report */}
                         <button
                           type="button"
@@ -604,6 +627,18 @@ export default function AdminEmployees() {
           isOpen={reportModalData.isOpen}
           initialEmployee={reportModalData.employee}
           onClose={() => setReportModalData({ isOpen: false, employee: null })}
+        />
+      )}
+
+      {/* Manual Check-In Modal */}
+      {manualModal.isOpen && (
+        <ManualCheckInModal
+          isOpen={manualModal.isOpen}
+          preselectedEmployee={manualModal.employee}
+          onClose={() => setManualModal({ isOpen: false, employee: null })}
+          onSuccess={(record, msg) => {
+            showToast(msg || 'Manual attendance recorded successfully!');
+          }}
         />
       )}
 

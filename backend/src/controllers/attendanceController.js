@@ -511,6 +511,143 @@ exports.updateAttendance = async (req, res) => {
   }
 };
 
+// @desc Admin: Manually mark or override employee attendance (Check-in / Check-out)
+// @route POST /api/attendance/manual-checkin
+exports.manualCheckIn = async (req, res) => {
+  try {
+    const {
+      userId,
+      date, // YYYY-MM-DD
+      checkInTime, // e.g. "09:30" (24h format HH:MM)
+      checkOutTime, // e.g. "18:30" (optional)
+      status, // 'present' | 'late' | 'half-day' | 'absent'
+      location = 'Office',
+      note = '',
+      adminRemark = '',
+    } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Please select an employee' });
+    }
+
+    const employee = await User.findById(userId);
+    if (!employee) {
+      return res.status(404).json({ success: false, message: 'Employee not found' });
+    }
+
+    const targetDate = date || getTodayDateString(); // "YYYY-MM-DD"
+    const shiftStart = employee.shiftStartTime || '09:30';
+    const effectiveCheckInTime = checkInTime || shiftStart;
+
+    // Helper to construct a local Date object in Asia/Kolkata (+05:30)
+    const parseDateTime = (dateStr, timeStr) => {
+      if (!timeStr) return null;
+      const [hStr, mStr] = timeStr.split(':');
+      const hh = String(hStr || '0').padStart(2, '0');
+      const mm = String(mStr || '0').padStart(2, '0');
+      return new Date(`${dateStr}T${hh}:${mm}:00+05:30`);
+    };
+
+    const checkInDate = parseDateTime(targetDate, effectiveCheckInTime);
+    const checkOutDate = checkOutTime ? parseDateTime(targetDate, checkOutTime) : null;
+
+    if (checkOutDate && checkOutDate < checkInDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'Check-out time cannot be earlier than Check-in time',
+      });
+    }
+
+    // Auto-determine status if not explicitly provided
+    let calculatedStatus = status;
+    if (!calculatedStatus) {
+      const [inH, inM] = effectiveCheckInTime.split(':').map(Number);
+      const [shiftH, shiftM] = shiftStart.split(':').map(Number);
+      const inMinutes = inH * 60 + inM;
+      const cutoffMinutes = shiftH * 60 + shiftM + 15; // 15-min grace
+      calculatedStatus = inMinutes > cutoffMinutes ? 'late' : 'present';
+    }
+
+    let totalHours = 0;
+    if (checkInDate && checkOutDate) {
+      const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+      totalHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    }
+
+    let record = await Attendance.findOne({ user: employee._id, date: targetDate });
+
+    const remarkText =
+      adminRemark ||
+      note ||
+      `Manual attendance recorded by Admin (${req.user?.name || 'Administrator'})`;
+
+    if (!record) {
+      record = new Attendance({
+        user: employee._id,
+        date: targetDate,
+        status: calculatedStatus,
+        approvalStatus: 'approved',
+        exceptionType: 'none',
+        adminRemark: remarkText,
+        clockIn: {
+          timestamp: checkInDate,
+          location: location || 'Office',
+          note: note || 'Manual Check-in by Admin',
+          punchType: calculatedStatus === 'late' ? 'Late Check-In' : 'Regular',
+        },
+        totalHours: totalHours,
+      });
+
+      if (checkOutDate) {
+        record.clockOut = {
+          timestamp: checkOutDate,
+          location: location || 'Office',
+          note: note || 'Manual Check-out by Admin',
+          punchType: 'Regular',
+        };
+      }
+    } else {
+      record.status = calculatedStatus;
+      record.approvalStatus = 'approved';
+      record.adminRemark = remarkText;
+
+      record.clockIn = {
+        ...(record.clockIn || {}),
+        timestamp: checkInDate,
+        location: location || record.clockIn?.location || 'Office',
+        note: note || record.clockIn?.note || 'Manual Check-in by Admin',
+        punchType: calculatedStatus === 'late' ? 'Late Check-In' : 'Regular',
+      };
+
+      if (checkOutDate) {
+        record.clockOut = {
+          ...(record.clockOut || {}),
+          timestamp: checkOutDate,
+          location: location || record.clockOut?.location || 'Office',
+          note: note || record.clockOut?.note || 'Manual Check-out by Admin',
+          punchType: 'Regular',
+        };
+        record.totalHours = totalHours;
+      } else if (record.clockOut?.timestamp) {
+        const diffMs = new Date(record.clockOut.timestamp).getTime() - checkInDate.getTime();
+        record.totalHours = Math.max(0, parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)));
+      }
+    }
+
+    await record.save();
+    await record.populate('user', 'name employeeId department designation profileImage email');
+
+    res.status(200).json({
+      success: true,
+      message: `Successfully recorded manual attendance for ${employee.name} (${targetDate})`,
+      data: record,
+    });
+  } catch (error) {
+    console.error('[Manual Check-In Error]:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc Admin: Get all pending regularization requests (Late Check-in, Forgot Check-in/out)
 // @route GET /api/attendance/regularize/pending
 exports.getPendingRegularizeRequests = async (req, res) => {

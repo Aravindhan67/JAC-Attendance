@@ -8,6 +8,7 @@ const {
   getAllAttendance,
   getTodayFeed,
   updateAttendance,
+  manualCheckIn,
   getPendingRegularizeRequests,
   reviewRegularizeRequest,
   getEmployeeAttendanceReport,
@@ -26,6 +27,7 @@ router.get('/report/employee/:userId', protect, requireAdmin, getEmployeeAttenda
 router.get('/today-feed', protect, requireAdmin, getTodayFeed);
 router.get('/regularize/pending', protect, requireAdmin, getPendingRegularizeRequests);
 router.put('/regularize/:id/review', protect, requireAdmin, reviewRegularizeRequest);
+router.post('/manual-checkin', protect, requireAdmin, manualCheckIn);
 router.put('/:id', protect, requireAdmin, updateAttendance);
 
 module.exports = router;

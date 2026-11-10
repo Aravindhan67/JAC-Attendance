@@ -3,6 +3,7 @@ import api from '../api/client';
 import StatusBadge from '../components/StatusBadge';
 import PhotoModal from '../components/PhotoModal';
 import IndividualReportModal from '../components/IndividualReportModal';
+import ManualCheckInModal from '../components/ManualCheckInModal';
 import {
   Calendar,
   Search,
@@ -18,6 +19,7 @@ import {
   ShieldCheck,
   Edit3,
   FileSpreadsheet,
+  UserCheck,
 } from 'lucide-react';
 
 export default function AdminAttendance() {
@@ -28,6 +30,11 @@ export default function AdminAttendance() {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [notification, setNotification] = useState(null);
   const [reportModal, setReportModal] = useState({ isOpen: false, employee: null });
+  const [manualCheckInModal, setManualCheckInModal] = useState({
+    isOpen: false,
+    employee: null,
+    defaultDate: '',
+  });
 
   // Review & Action Modal State
   const [actionModal, setActionModal] = useState({
@@ -237,6 +244,16 @@ export default function AdminAttendance() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+          {/* Manual Employee Attendance Check-In Button */}
+          <button
+            type="button"
+            onClick={() => setManualCheckInModal({ isOpen: true, employee: null, defaultDate: dateFilter })}
+            className="bg-[#1B3B34] hover:bg-[#254F46] text-[#FAF6EE] text-xs font-bold px-4 py-2.5 rounded-xl shadow-warm-sm flex items-center gap-2 transition-all active:scale-95 border border-[#142C26]"
+          >
+            <UserCheck className="w-4 h-4 text-[#A9C7B5]" />
+            Manual Check-In
+          </button>
+
           {/* Individual Employee Excel Report Generator */}
           <button
             type="button"
@@ -589,9 +606,24 @@ export default function AdminAttendance() {
                         </div>
                       </td>
                       
-                      {/* ACTIONS COLUMN: Approve & Reject Options */}
+                      {/* ACTIONS COLUMN: Approve, Reject & Manual Edit Options */}
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Manual Edit / Override Button */}
+                          <button
+                            type="button"
+                            title={`Edit or Manual Check-In for ${r.user?.name || 'Staff'}`}
+                            onClick={() =>
+                              setManualCheckInModal({
+                                isOpen: true,
+                                employee: r.user,
+                                defaultDate: r.date || dateFilter,
+                              })
+                            }
+                            className="p-1.5 rounded-lg text-[#5A5347] hover:text-[#1B3B34] hover:bg-[#EAE4D6] transition-colors"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
                           {/* When record is Late or Pending: Show distinct Approve and Reject buttons */}
                           {isLate || isPending ? (
                             <>
@@ -818,6 +850,21 @@ export default function AdminAttendance() {
           isOpen={reportModal.isOpen}
           initialEmployee={reportModal.employee}
           onClose={() => setReportModal({ isOpen: false, employee: null })}
+        />
+      )}
+
+      {/* Manual Check-In / Attendance Override Modal */}
+      {manualCheckInModal.isOpen && (
+        <ManualCheckInModal
+          isOpen={manualCheckInModal.isOpen}
+          preselectedEmployee={manualCheckInModal.employee}
+          defaultDate={manualCheckInModal.defaultDate || dateFilter}
+          onClose={() => setManualCheckInModal({ isOpen: false, employee: null, defaultDate: '' })}
+          onSuccess={(record, message) => {
+            showToast(message || 'Attendance record saved successfully!', 'success');
+            fetchAttendance();
+            fetchPendingRequests();
+          }}
         />
       )}
 
