@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '../api/client';
 import {
   UserCheck,
@@ -10,6 +10,7 @@ import {
   X,
   CheckCircle2,
   ChevronDown,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function ManualCheckInModal({
@@ -17,6 +18,7 @@ export default function ManualCheckInModal({
   onClose,
   onSuccess,
   preselectedEmployee = null,
+  existingEmployees = [],
   defaultDate = '',
 }) {
   const [employees, setEmployees] = useState([]);
@@ -40,36 +42,86 @@ export default function ManualCheckInModal({
     return `${year}-${month}-${day}`;
   };
 
-  // Fetch employees list
-  useEffect(() => {
-    if (!isOpen) return;
+  // Helper to deduplicate employee records by _id
+  const dedupeEmployees = (list = []) => {
+    const map = new Map();
+    list.filter(Boolean).forEach((emp) => {
+      const id = emp._id || emp.id;
+      if (id && !map.has(String(id))) {
+        map.set(String(id), emp);
+      }
+    });
+    return Array.from(map.values());
+  };
 
-    const fetchStaff = async () => {
-      setLoadingEmployees(true);
+  // Resilient multi-source employee fetching
+  const fetchStaff = useCallback(async () => {
+    setLoadingEmployees(true);
+    let gatheredList = [];
+
+    // 1. Primary endpoint: /employees
+    try {
+      const res = await api.get('/employees');
+      if (res.data?.success && Array.isArray(res.data?.data)) {
+        gatheredList = res.data.data;
+      } else if (Array.isArray(res.data?.data)) {
+        gatheredList = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        gatheredList = res.data;
+      }
+    } catch (err) {
+      console.warn('Primary /employees fetch notice:', err.message);
+    }
+
+    // 2. Secondary fallback if primary is empty: /attendance/today-feed
+    if (gatheredList.length === 0) {
       try {
-        const res = await api.get('/employees');
-        if (res.data.success) {
-          const list = res.data.data || [];
-          setEmployees(list);
-          if (preselectedEmployee && preselectedEmployee._id) {
-            setSelectedUserId(preselectedEmployee._id);
-            setCheckInTime(preselectedEmployee.shiftStartTime || '09:30');
-          } else if (list.length > 0 && !selectedUserId) {
-            setSelectedUserId(list[0]._id);
-            setCheckInTime(list[0].shiftStartTime || '09:30');
+        const feedRes = await api.get('/attendance/today-feed');
+        if (feedRes.data?.data && Array.isArray(feedRes.data.data)) {
+          const feedStaff = feedRes.data.data.map((r) => r.user).filter(Boolean);
+          if (feedStaff.length > 0) {
+            gatheredList = feedStaff;
           }
         }
-      } catch (err) {
-        console.error('Failed to load employees for manual check-in:', err);
-      } finally {
-        setLoadingEmployees(false);
+      } catch (feedErr) {
+        console.warn('Secondary today-feed fetch notice:', feedErr.message);
       }
-    };
+    }
 
-    fetchStaff();
-  }, [isOpen, preselectedEmployee]);
+    // 3. Tertiary fallback: Merge in existingEmployees from props
+    if (existingEmployees && existingEmployees.length > 0) {
+      gatheredList = [...gatheredList, ...existingEmployees];
+    }
 
-  // Set default values when modal opens
+    // 4. Ensure preselected employee is included if present
+    if (preselectedEmployee && (preselectedEmployee._id || preselectedEmployee.id)) {
+      gatheredList = [preselectedEmployee, ...gatheredList];
+    }
+
+    const uniqueEmployees = dedupeEmployees(gatheredList);
+    setEmployees(uniqueEmployees);
+    setLoadingEmployees(false);
+
+    // Auto-select initial employee
+    if (preselectedEmployee?._id || preselectedEmployee?.id) {
+      const pId = String(preselectedEmployee._id || preselectedEmployee.id);
+      setSelectedUserId(pId);
+      if (preselectedEmployee.shiftStartTime) {
+        setCheckInTime(preselectedEmployee.shiftStartTime);
+      }
+    } else if (uniqueEmployees.length > 0) {
+      setSelectedUserId((prev) => {
+        if (prev && uniqueEmployees.some((e) => String(e._id || e.id) === String(prev))) {
+          return prev;
+        }
+        const first = uniqueEmployees[0];
+        if (first?.shiftStartTime) setCheckInTime(first.shiftStartTime);
+        return String(first._id || first.id);
+      });
+    }
+  }, [existingEmployees, preselectedEmployee]);
+
+  // Immediate synchronous initialization from props whenever modal opens
   useEffect(() => {
     if (isOpen) {
       setDate(defaultDate || getTodayString());
@@ -78,21 +130,38 @@ export default function ManualCheckInModal({
       setStatus('present');
       setLocation('Office');
       setAdminRemark('');
-      if (preselectedEmployee) {
-        setSelectedUserId(preselectedEmployee._id || preselectedEmployee.id);
-        setCheckInTime(preselectedEmployee.shiftStartTime || '09:30');
+
+      // Pre-seed from existing props immediately so dropdown is never blank
+      const seeds = [];
+      if (preselectedEmployee) seeds.push(preselectedEmployee);
+      if (existingEmployees && existingEmployees.length > 0) seeds.push(...existingEmployees);
+
+      if (seeds.length > 0) {
+        const unique = dedupeEmployees(seeds);
+        setEmployees(unique);
+        const targetId = String(preselectedEmployee?._id || preselectedEmployee?.id || unique[0]._id || unique[0].id);
+        setSelectedUserId(targetId);
+        const matched = unique.find((e) => String(e._id || e.id) === targetId);
+        if (matched?.shiftStartTime) setCheckInTime(matched.shiftStartTime);
       }
+
+      // Fetch fresh list from server
+      fetchStaff();
     }
-  }, [isOpen, defaultDate, preselectedEmployee]);
+  }, [isOpen, defaultDate, preselectedEmployee, existingEmployees, fetchStaff]);
 
-  // Find currently selected employee object
-  const currentEmployee = employees.find((e) => e._id === selectedUserId) || preselectedEmployee;
+  // Ensure current employee object matches selection
+  const currentEmployee =
+    employees.find((e) => String(e._id || e.id) === String(selectedUserId)) ||
+    (preselectedEmployee && String(preselectedEmployee._id || preselectedEmployee.id) === String(selectedUserId)
+      ? preselectedEmployee
+      : null);
 
-  // Handle employee change
+  // Handle employee dropdown change
   const handleEmployeeChange = (e) => {
     const id = e.target.value;
     setSelectedUserId(id);
-    const emp = employees.find((item) => item._id === id);
+    const emp = employees.find((item) => String(item._id || item.id) === String(id));
     if (emp && emp.shiftStartTime) {
       setCheckInTime(emp.shiftStartTime);
     }
@@ -147,7 +216,7 @@ export default function ManualCheckInModal({
         status,
         location,
         note: adminRemark || 'Manual Check-in by Admin',
-        adminRemark: adminRemark || `Manual attendance recorded by Admin`,
+        adminRemark: adminRemark || 'Manual attendance recorded by Admin',
       };
 
       const res = await api.post('/attendance/manual-checkin', payload);
@@ -210,27 +279,45 @@ export default function ManualCheckInModal({
 
           {/* Select Employee */}
           <div>
-            <label className="block text-xs font-bold text-[#5A5347] mb-1.5">
-              Select Employee <span className="text-[#C25E37]">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-[#5A5347]">
+                Select Employee <span className="text-[#C25E37]">*</span>
+              </label>
+              {loadingEmployees && (
+                <span className="text-[10px] font-bold text-[#1B3B34] flex items-center gap-1">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  Updating list...
+                </span>
+              )}
+            </div>
+
             <div className="relative">
               <select
                 value={selectedUserId}
                 onChange={handleEmployeeChange}
-                disabled={loadingEmployees}
+                required
                 className="w-full text-xs px-3.5 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] font-semibold appearance-none focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] cursor-pointer"
               >
-                {employees.map((emp) => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.name} ({emp.employeeId}) — {emp.department || 'General'}
+                {employees.length === 0 ? (
+                  <option value="">
+                    {loadingEmployees ? '⏳ Loading employees directory...' : '⚠️ No employees available'}
                   </option>
-                ))}
+                ) : (
+                  <>
+                    {!selectedUserId && <option value="">-- Choose an Employee --</option>}
+                    {employees.map((emp) => (
+                      <option key={emp._id || emp.id} value={emp._id || emp.id}>
+                        {emp.name} ({emp.employeeId || 'Staff'}) — {emp.department || emp.designation || 'General'}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
               <ChevronDown className="w-4 h-4 text-[#5A5347] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
             {/* Selected Employee Shift Preview */}
-            {currentEmployee && (
+            {currentEmployee ? (
               <div className="mt-2 p-2.5 rounded-xl bg-[#EAE4D6]/60 border border-[#DCD4C4] flex items-center justify-between text-[11px] text-[#5A5347]">
                 <span>
                   Registered Shift:{' '}
@@ -242,7 +329,18 @@ export default function ManualCheckInModal({
                   Cutoff: {currentEmployee.shiftStartTime ? '15m grace' : '09:45 AM'}
                 </span>
               </div>
-            )}
+            ) : employees.length === 0 && !loadingEmployees ? (
+              <div className="mt-2 flex items-center justify-between text-[11px] text-[#C25E37]">
+                <span>Could not load employee directory.</span>
+                <button
+                  type="button"
+                  onClick={fetchStaff}
+                  className="font-bold underline hover:text-[#AA4F2C] flex items-center gap-1"
+                >
+                  <RefreshCw className="w-3 h-3" /> Retry Loading
+                </button>
+              </div>
+            ) : null}
           </div>
 
           {/* Date & Location */}
@@ -367,8 +465,8 @@ export default function ManualCheckInModal({
             </button>
             <button
               type="submit"
-              disabled={submitting}
-              className="px-5 py-2.5 rounded-xl bg-[#1B3B34] hover:bg-[#254F46] active:scale-95 text-[#FAF6EE] text-xs font-bold transition-all shadow-warm-sm flex items-center gap-2 border border-[#142C26] disabled:opacity-50"
+              disabled={submitting || !selectedUserId}
+              className="px-5 py-2.5 rounded-xl bg-[#1B3B34] hover:bg-[#254F46] active:scale-95 text-[#FAF6EE] text-xs font-bold transition-all shadow-warm-sm flex items-center gap-2 border border-[#142C26] disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 stroke-[2.5]" />
               {submitting ? 'Recording Punch...' : 'Record Attendance'}

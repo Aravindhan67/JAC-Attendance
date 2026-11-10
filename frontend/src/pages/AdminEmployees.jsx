@@ -635,6 +635,7 @@ export default function AdminEmployees() {
         <ManualCheckInModal
           isOpen={manualModal.isOpen}
           preselectedEmployee={manualModal.employee}
+          existingEmployees={employees}
           onClose={() => setManualModal({ isOpen: false, employee: null })}
           onSuccess={(record, msg) => {
             showToast(msg || 'Manual attendance recorded successfully!');

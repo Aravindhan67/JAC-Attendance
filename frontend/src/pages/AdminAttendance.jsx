@@ -860,6 +860,7 @@ export default function AdminAttendance() {
           isOpen={manualCheckInModal.isOpen}
           preselectedEmployee={manualCheckInModal.employee}
           defaultDate={manualCheckInModal.defaultDate || dateFilter}
+          existingEmployees={records.map((r) => r.user).filter(Boolean)}
           onClose={() => setManualCheckInModal({ isOpen: false, employee: null, defaultDate: '' })}
           onSuccess={(record, message) => {
             showToast(message || 'Attendance record saved successfully!', 'success');
