@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Clock, ShieldCheck, UserCircle, Sparkles } from 'lucide-react';
+import { LogOut, Clock, ShieldCheck } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
@@ -12,29 +12,29 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-all">
+    <header className="sticky top-0 z-30 bg-[#FAF6EE] border-b border-[#DCD4C4] shadow-[0_1px_4px_rgba(35,32,27,0.03)] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand / Logo */}
-        <div className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-black p-1 shadow-sm border border-slate-700 flex items-center justify-center shrink-0 overflow-hidden group-hover:scale-105 transition-transform duration-300">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#FAF6EE] p-1 shadow-xs border border-[#DCD4C4] flex items-center justify-center shrink-0 overflow-hidden">
             <img
               src="/logo.jpg"
               alt="JAC MediaLand Logo"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain rounded-lg"
             />
           </div>
           <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-black text-slate-900 tracking-tight text-sm sm:text-base">
+            <div className="flex items-center gap-2">
+              <span className="font-black text-[#1B3B34] tracking-tight text-sm sm:text-base">
                 JAC MediaLand
               </span>
-              <span className="text-[9px] sm:text-[10px] font-black tracking-widest uppercase bg-slate-900 text-[#E6CA65] border border-[#D4AF37]/35 px-2 py-0.5 rounded-full shadow-xs">
+              <span className="text-[9px] sm:text-[10px] font-extrabold tracking-widest uppercase bg-[#E2ECE6] text-[#1B3B34] border border-[#BCD3C5] px-2 py-0.5 rounded-full">
                 IT Hub
               </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium hidden sm:block">
-              DREAM ZONE • Enterprise Workforce
+            <p className="text-[10px] sm:text-[11px] text-[#5A5347] font-medium hidden sm:block">
+              Workforce Operations & Shift Registry
             </p>
           </div>
         </div>
@@ -42,57 +42,55 @@ export default function Navbar() {
         {/* Right Section: Time & User Profile */}
         <div className="flex items-center gap-3 sm:gap-4">
           
-          {/* Live digital clock */}
-          <div className="hidden md:flex items-center gap-2.5 bg-white/90 border border-slate-200/90 px-3.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="font-medium text-slate-600">
+          {/* Live Clock Badge */}
+          <div className="hidden md:flex items-center gap-2.5 bg-[#EAE4D6] border border-[#DCD4C4] px-3.5 py-1.5 rounded-xl text-xs font-medium text-[#23201B]">
+            <span className="w-2 h-2 rounded-full bg-[#1B3B34]" />
+            <span className="font-semibold text-[#5A5347]">
               {currentTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </span>
-            <span className="font-mono text-slate-900 font-bold bg-slate-100 px-2 py-0.5 rounded-md shadow-xs border border-slate-200/60">
+            <span className="font-mono text-[#1B3B34] font-extrabold bg-[#FAF6EE] px-2 py-0.5 rounded-md border border-[#DCD4C4]">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </span>
           </div>
 
           {/* User info badge */}
           {user && (
-            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-slate-200">
+            <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-[#DCD4C4]">
               <div className="text-right">
                 <div className="flex items-center justify-end gap-1.5">
-                  <span className="text-xs font-bold text-slate-800 hidden sm:inline">{user.name}</span>
+                  <span className="text-xs font-bold text-[#23201B] hidden sm:inline">{user.name}</span>
                   {isAdmin ? (
-                    <span className="text-[10px] bg-slate-900 text-[#E6CA65] font-bold px-2.5 py-0.5 rounded-full border border-[#D4AF37]/35 flex items-center gap-1 shadow-xs">
-                      <ShieldCheck className="w-3 h-3 text-[#D4AF37]" />
+                    <span className="text-[10px] bg-[#1B3B34] text-[#FAF6EE] font-extrabold px-2 py-0.5 rounded-full border border-[#142E28] flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-[#E2ECE6]" />
                       Admin
                     </span>
                   ) : (
-                    <span className="text-[10px] bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full border border-slate-200 shadow-xs">
+                    <span className="text-[10px] bg-[#EAE4D6] text-[#23201B] font-bold px-2 py-0.5 rounded-full border border-[#DCD4C4]">
                       {user.employeeId}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-slate-500 hidden sm:block font-medium truncate max-w-[150px]">
+                <div className="text-[11px] text-[#5A5347] hidden sm:block font-medium truncate max-w-[150px]">
                   {user.designation || user.department}
                 </div>
               </div>
 
-              {/* Avatar with luxury matte gold ring */}
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#B38728] via-[#D4AF37] to-[#C59B27] p-[1.5px] shadow-sm shrink-0">
-                <div className="w-full h-full rounded-full bg-white flex items-center justify-center text-slate-800 font-bold text-xs overflow-hidden">
-                  {user.profileImage ? (
-                    <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="bg-slate-900 w-full h-full flex items-center justify-center text-[#E6CA65] font-black">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </span>
-                  )}
-                </div>
+              {/* Avatar with handcrafted terracotta ring */}
+              <div className="w-9 h-9 rounded-full bg-[#FAF6EE] border-2 border-[#C25E37] p-0.5 shadow-xs shrink-0 flex items-center justify-center">
+                {user.profileImage ? (
+                  <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span className="bg-[#1B3B34] w-full h-full rounded-full flex items-center justify-center text-[#FAF6EE] font-black text-xs">
+                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                )}
               </div>
 
               {/* Logout Button */}
               <button
                 onClick={logout}
                 title="Sign Out"
-                className="text-slate-400 hover:text-rose-600 p-2 rounded-xl hover:bg-rose-50 transition-all duration-200"
+                className="text-[#8A8274] hover:text-[#C25E37] p-2 rounded-xl hover:bg-[#F6E7DF] transition-colors"
               >
                 <LogOut className="w-4 h-4" />
               </button>

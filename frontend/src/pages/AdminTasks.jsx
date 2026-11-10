@@ -207,11 +207,11 @@ export default function AdminTasks() {
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <CheckSquare className="w-6 h-6 text-amber-500" />
+          <h1 className="text-2xl font-black text-[#1B3B34] flex items-center gap-2 tracking-tight">
+            <CheckSquare className="w-6 h-6 text-[#C25E37]" />
             Task Management & Assignment
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-[#5A5347] mt-0.5 font-medium">
             Assign deliverables to staff, track progress timelines, and oversee project delivery
           </p>
         </div>
@@ -219,9 +219,9 @@ export default function AdminTasks() {
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 flex items-center gap-2 transition-all self-start sm:self-auto uppercase tracking-wider"
+          className="bg-[#C25E37] hover:bg-[#AA4F2C] text-[#FAF6EE] text-xs font-bold px-5 py-2.5 rounded-xl shadow-warm-sm flex items-center gap-2 transition-all self-start sm:self-auto border border-[#A74E2B] active:scale-95"
         >
-          <Plus className="w-4 h-4 stroke-[3]" />
+          <Plus className="w-4 h-4 stroke-[2.5]" />
           Assign New Task
         </button>
       </div>
@@ -229,33 +229,33 @@ export default function AdminTasks() {
       {/* Stats Summary */}
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Total Tasks</span>
-            <div className="text-2xl font-black text-slate-800 mt-1">{stats.total}</div>
+          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+            <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Total Tasks</span>
+            <div className="text-2xl font-black text-[#1B3B34] mt-1">{stats.total}</div>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">In Progress</span>
-            <div className="text-2xl font-black text-blue-600 mt-1">{stats.inProgress}</div>
+          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+            <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">In Progress</span>
+            <div className="text-2xl font-black text-[#9C6500] mt-1">{stats.inProgress}</div>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Completed</span>
-            <div className="text-2xl font-black text-emerald-600 mt-1">{stats.completed}</div>
+          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+            <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Completed</span>
+            <div className="text-2xl font-black text-[#1B3B34] mt-1">{stats.completed}</div>
           </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Overdue</span>
-            <div className="text-2xl font-black text-rose-600 mt-1">{stats.overdue}</div>
+          <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+            <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Overdue</span>
+            <div className="text-2xl font-black text-[#B84030] mt-1">{stats.overdue}</div>
           </div>
         </div>
       )}
 
       {/* Filter Bar */}
-      <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="bg-[#FAF6EE] p-3.5 sm:p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm flex flex-wrap items-center gap-2 sm:gap-3">
         
         {/* Status Filter */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+          className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl px-3 py-2 text-xs font-bold text-[#23201B] focus:outline-none cursor-pointer"
         >
           <option value="all">All Statuses</option>
           <option value="pending">Pending</option>
@@ -267,7 +267,7 @@ export default function AdminTasks() {
         <select
           value={priorityFilter}
           onChange={(e) => setPriorityFilter(e.target.value)}
-          className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+          className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl px-3 py-2 text-xs font-bold text-[#23201B] focus:outline-none cursor-pointer"
         >
           <option value="all">All Priorities</option>
           <option value="urgent">Urgent</option>
@@ -280,7 +280,7 @@ export default function AdminTasks() {
         <select
           value={assigneeFilter}
           onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+          className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl px-3 py-2 text-xs font-bold text-[#23201B] focus:outline-none cursor-pointer"
         >
           <option value="All">All Assignees</option>
           {employees.map((emp) => (
@@ -294,7 +294,7 @@ export default function AdminTasks() {
         <select
           value={departmentFilter}
           onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+          className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl px-3 py-2 text-xs font-bold text-[#23201B] focus:outline-none cursor-pointer"
         >
           <option value="All">All Departments</option>
           <option value="Full Stack Development">Full Stack Development</option>
@@ -313,10 +313,10 @@ export default function AdminTasks() {
       </div>
 
       {/* Tasks Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-[#FAF6EE] rounded-3xl border border-[#DCD4C4] shadow-warm-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-100">
+            <thead className="bg-[#EAE4D6]/70 text-[#5A5347] uppercase tracking-wider text-[10px] font-bold border-b border-[#DCD4C4]">
               <tr>
                 <th className="py-3.5 px-6">Task Title & Details</th>
                 <th className="py-3.5 px-4">Assignee</th>
@@ -446,16 +446,16 @@ export default function AdminTasks() {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#23201B]/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="bg-[#FAF6EE] rounded-3xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden border border-[#DCD4C4] animate-in fade-in zoom-in-95 duration-200">
             
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
-              <h3 className="text-base font-bold text-slate-800">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#DCD4C4] bg-[#FAF6EE] shrink-0">
+              <h3 className="text-base font-bold text-[#1B3B34]">
                 {editingTask ? 'Edit Task Deliverable' : 'Assign New Task'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
+                className="text-[#8A8274] hover:text-[#23201B] p-1.5 rounded-lg hover:bg-[#EAE4D6] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -463,14 +463,14 @@ export default function AdminTasks() {
 
             <form onSubmit={handleSubmitForm} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               {formError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                <div className="p-3 bg-[#F8ECE9] border border-[#E9C3BC] rounded-xl text-xs text-[#8A2418] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                   Task Title
                 </label>
                 <input
@@ -479,13 +479,13 @@ export default function AdminTasks() {
                   placeholder="e.g. Brand Reel Video Edit & Sound Mix"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  className="w-full text-xs px-3.5 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Assign To Employee
                   </label>
                   <select
@@ -499,7 +499,7 @@ export default function AdminTasks() {
                         department: emp?.department || formData.department,
                       });
                     }}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="">Select Staff Member</option>
                     {employees.map((emp) => (
@@ -511,7 +511,7 @@ export default function AdminTasks() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Due Date
                   </label>
                   <input
@@ -519,20 +519,20 @@ export default function AdminTasks() {
                     required
                     value={formData.dueDate}
                     onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Category / Deliverable
                   </label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="Full Stack Dev">Full Stack Feature</option>
                     <option value="Frontend UI">Frontend UI / Component</option>
@@ -549,13 +549,13 @@ export default function AdminTasks() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Priority Level
                   </label>
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -566,7 +566,7 @@ export default function AdminTasks() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                   Description & Instructions
                 </label>
                 <textarea
@@ -574,7 +574,7 @@ export default function AdminTasks() {
                   placeholder="Detail the instructions, assets link, format requirements..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  className="w-full text-xs px-3.5 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                 />
               </div>
 
@@ -582,14 +582,14 @@ export default function AdminTasks() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                  className="px-4 py-2 text-xs font-semibold text-[#5A5347] hover:text-[#23201B] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 uppercase tracking-wider"
+                  className="bg-[#C25E37] hover:bg-[#AA4F2C] disabled:opacity-50 text-[#FAF6EE] font-bold text-xs px-5 py-2.5 rounded-xl shadow-warm-sm border border-[#A74E2B] transition-all active:scale-95"
                 >
                   {submitting
                     ? 'Saving...'

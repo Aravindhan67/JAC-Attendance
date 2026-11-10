@@ -6,8 +6,6 @@ import {
   CalendarCheck2,
   CalendarOff,
   Users,
-  ClipboardList,
-  ShieldAlert,
   Camera,
   CheckSquare,
 } from 'lucide-react';
@@ -32,10 +30,10 @@ export default function Sidebar() {
 
   const renderNavGroup = (title, links) => (
     <div className="mb-6">
-      <div className="text-[11px] uppercase tracking-wider font-extrabold text-slate-400 px-3 mb-2">
+      <div className="text-[11px] uppercase tracking-wider font-extrabold text-[#8A8274] px-3 mb-2">
         {title}
       </div>
-      <nav className="space-y-1.5">
+      <nav className="space-y-1">
         {links.map((link) => {
           const Icon = link.icon;
           return (
@@ -44,10 +42,10 @@ export default function Sidebar() {
               to={link.to}
               end={link.to === '/' || link.to === '/admin'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-150 ${
                   isActive
-                    ? 'bg-slate-900 text-[#F2E394] border border-[#D4AF37]/40 shadow-sm scale-[1.01]'
-                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100/80'
+                    ? 'bg-[#1B3B34] text-[#FAF6EE] shadow-xs'
+                    : 'text-[#5A5347] hover:text-[#23201B] hover:bg-[#EAE4D6]'
                 }`
               }
             >
@@ -61,30 +59,29 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="w-64 bg-white/70 backdrop-blur-md border-r border-amber-900/10 p-4 shrink-0 hidden md:block min-h-[calc(100vh-4rem)]">
+    <aside className="w-64 bg-[#FAF6EE] border-r border-[#DCD4C4] p-4 shrink-0 hidden md:block min-h-[calc(100vh-4rem)]">
       {/* Employee navigation */}
       {renderNavGroup('Employee Workspace', employeeLinks)}
 
       {/* Admin specific navigation */}
       {isAdmin && renderNavGroup('Admin Management', adminLinks)}
 
-      {/* Quick helper box */}
-      <div className="mt-auto pt-6 border-t border-amber-900/10 text-slate-500 text-xs p-2">
-        <div className="bg-amber-50/40 border border-amber-200/50 rounded-2xl p-3.5">
+      {/* Office Shift Timing Card */}
+      <div className="mt-auto pt-6 border-t border-[#DCD4C4] text-xs">
+        <div className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-2xl p-3.5">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            <p className="font-extrabold text-slate-800 text-[11px]">Office Shift Timing</p>
+            <span className="w-2 h-2 rounded-full bg-[#C25E37]" />
+            <p className="font-extrabold text-[#1B3B34] text-[11px]">Office Shift Policy</p>
           </div>
-          <p className="text-[11px] text-slate-600 leading-relaxed font-medium">
-            Standard: <span className="font-bold text-slate-900">09:30 AM – 06:30 PM</span>
+          <p className="text-[11px] text-[#5A5347] leading-relaxed font-medium">
+            Standard: <span className="font-bold text-[#23201B]">09:30 AM – 06:30 PM</span>
             <br />
-            Check-In Cutoff: <span className="text-amber-800 font-bold">09:45 AM</span>
+            Check-In Cutoff: <span className="text-[#C25E37] font-bold">09:45 AM</span>
             <br />
-            Check-Out Cutoff: <span className="text-amber-800 font-bold">07:00 PM</span>
+            Check-Out Cutoff: <span className="text-[#C25E37] font-bold">07:00 PM</span>
           </p>
         </div>
       </div>
     </aside>
   );
 }
-

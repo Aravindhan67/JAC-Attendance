@@ -7,9 +7,7 @@ import {
   CalendarOff,
   Users,
   Camera,
-  Clock,
   CheckSquare,
-  Sparkles,
 } from 'lucide-react';
 
 export default function BottomNav() {
@@ -39,26 +37,21 @@ export default function BottomNav() {
 
   return (
     <div className="fixed bottom-3 inset-x-3 z-40 max-w-md mx-auto md:hidden pointer-events-none">
-      {/* Floating Pro Capsule Dock */}
-      <nav className="pointer-events-auto relative bg-[#0B0D13]/95 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-[0_16px_40px_rgba(0,0,0,0.7)] px-2.5 py-1.5 transition-all duration-300">
-        
-        {/* Subtle Matte Gold Accent Line */}
-        <div className="absolute -top-[1px] inset-x-14 h-[1px] bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent" />
-
+      {/* Floating Bespoke Capsule Dock */}
+      <nav className="pointer-events-auto relative bg-[#FAF6EE] border border-[#DCD4C4] rounded-2xl shadow-[0_8px_25px_rgba(35,32,27,0.12)] px-2.5 py-1.5 transition-all">
         <div className="flex items-center justify-between">
           {items.map((item) => {
             const Icon = item.icon;
             const isMatch = item.exact
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to);
-            // If on '/', highlight the center Camera for employee
             const isActive = item.isCenter
               ? isMatch
               : item.to === '/' && !isAdmin
               ? false
               : isMatch;
 
-            // Special Elevated Centerpiece Action (Camera)
+            // Center Action (Punch Camera)
             if (item.isCenter) {
               return (
                 <NavLink
@@ -72,24 +65,21 @@ export default function BottomNav() {
                   className="flex flex-col items-center -mt-5 relative group transition-transform active:scale-95 px-2"
                 >
                   <div
-                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${
+                    className={`w-11 h-11 rounded-full flex items-center justify-center transition-all shadow-md ${
                       isActive
-                        ? 'bg-gradient-to-tr from-[#B38728] via-[#D4AF37] to-[#C59B27] text-slate-950 border border-[#F2E394]/40 shadow-lg shadow-black/60 scale-105'
-                        : 'bg-zinc-900 text-amber-200/70 border border-white/10 shadow-md hover:scale-105'
+                        ? 'bg-[#C25E37] text-[#FAF6EE] border-2 border-[#FAF6EE] scale-105'
+                        : 'bg-[#1B3B34] text-[#FAF6EE] border-2 border-[#FAF6EE] hover:scale-105'
                     }`}
                   >
                     <Icon className="w-5 h-5 stroke-[2.2]" />
                   </div>
                   <span
                     className={`text-[9px] font-extrabold uppercase tracking-wider mt-1 transition-colors ${
-                      isActive ? 'text-[#E6CA65]' : 'text-slate-400'
+                      isActive ? 'text-[#C25E37]' : 'text-[#5A5347]'
                     }`}
                   >
                     {item.label}
                   </span>
-                  {isActive && (
-                    <span className="w-1 h-1 rounded-full bg-[#D4AF37] mt-0.5" />
-                  )}
                 </NavLink>
               );
             }
@@ -98,13 +88,13 @@ export default function BottomNav() {
               <NavLink
                 key={item.to + item.label}
                 to={item.to}
-                className="flex flex-col items-center justify-center flex-1 py-1 px-1 relative transition-all active:scale-90"
+                className="flex flex-col items-center justify-center flex-1 py-1 px-1 relative transition-all active:scale-95"
               >
                 <div
-                  className={`flex items-center justify-center px-3 py-1.5 rounded-2xl transition-all duration-200 ${
+                  className={`flex items-center justify-center px-3 py-1.5 rounded-xl transition-colors ${
                     isActive
-                      ? 'bg-white/10 text-[#E6CA65] border border-[#D4AF37]/30 font-bold'
-                      : 'text-slate-400 hover:text-slate-200'
+                      ? 'bg-[#E2ECE6] text-[#1B3B34] font-extrabold'
+                      : 'text-[#5A5347] hover:text-[#23201B]'
                   }`}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? 'stroke-[2.2]' : 'stroke-2'}`} />
@@ -112,15 +102,11 @@ export default function BottomNav() {
 
                 <span
                   className={`text-[10px] tracking-tight mt-0.5 font-bold truncate max-w-[64px] transition-colors ${
-                    isActive ? 'text-[#E6CA65]' : 'text-slate-400'
+                    isActive ? 'text-[#1B3B34]' : 'text-[#8A8274]'
                   }`}
                 >
                   {item.label}
                 </span>
-
-                {isActive && (
-                  <span className="w-1 h-1 rounded-full bg-[#D4AF37] mt-0.5" />
-                )}
               </NavLink>
             );
           })}
@@ -129,4 +115,3 @@ export default function BottomNav() {
     </div>
   );
 }
-

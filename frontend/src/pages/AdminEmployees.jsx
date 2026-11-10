@@ -169,8 +169,8 @@ export default function AdminEmployees() {
       {/* Header & Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Staff Management</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-2xl font-black text-[#1B3B34] tracking-tight">Staff Management</h1>
+          <p className="text-xs text-[#5A5347] mt-0.5 font-medium">
             Add team members, assign shift timings, and export individual attendance reports
           </p>
         </div>
@@ -180,9 +180,9 @@ export default function AdminEmployees() {
           <button
             type="button"
             onClick={() => setReportModalData({ isOpen: true, employee: null })}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md shadow-emerald-900/10 flex items-center gap-2 transition-all active:scale-95"
+            className="bg-[#1B3B34] hover:bg-[#254F46] text-[#FAF6EE] text-xs font-bold px-4 py-2.5 rounded-xl shadow-warm-sm flex items-center gap-2 transition-all active:scale-95 border border-[#142C26]"
           >
-            <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
+            <FileSpreadsheet className="w-4 h-4 text-[#A9C7B5]" />
             Individual Excel Report
           </button>
 
@@ -190,39 +190,39 @@ export default function AdminEmployees() {
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 text-xs font-black px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 flex items-center gap-2 transition-all uppercase tracking-wider active:scale-95"
+            className="bg-[#C25E37] hover:bg-[#AA4F2C] text-[#FAF6EE] text-xs font-bold px-5 py-2.5 rounded-xl shadow-warm-sm flex items-center gap-2 transition-all active:scale-95 border border-[#A74E2B]"
           >
-            <UserPlus className="w-4 h-4 stroke-[3]" />
+            <UserPlus className="w-4 h-4 stroke-[2.5]" />
             Add Employee
           </button>
         </div>
       </div>
 
       {/* Search Input */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-2 max-w-md">
-        <Search className="w-4 h-4 text-slate-400 ml-1" />
+      <div className="bg-[#FAF6EE] p-3 rounded-2xl border border-[#DCD4C4] shadow-warm-sm flex items-center gap-2 max-w-md">
+        <Search className="w-4 h-4 text-[#8A8274] ml-1" />
         <input
           type="text"
           placeholder="Search employees by name, ID or email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
-          className="w-full text-xs text-slate-800 bg-transparent focus:outline-none"
+          className="w-full text-xs text-[#23201B] placeholder-[#8A8274] bg-transparent focus:outline-none"
         />
         <button
           type="button"
           onClick={fetchEmployees}
-          className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg font-semibold"
+          className="bg-[#EAE4D6] hover:bg-[#DCD4C4] text-[#23201B] text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
         >
           Search
         </button>
       </div>
 
       {/* Employees Directory Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-[#FAF6EE] rounded-3xl border border-[#DCD4C4] shadow-warm-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-100">
+            <thead className="bg-[#EAE4D6]/70 text-[#5A5347] uppercase tracking-wider text-[10px] font-bold border-b border-[#DCD4C4]">
               <tr>
                 <th className="py-3.5 px-6">Employee ID</th>
                 <th className="py-3.5 px-4">Name & Email</th>
@@ -233,43 +233,43 @@ export default function AdminEmployees() {
                 <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#DCD4C4]/60">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center text-slate-400">
+                  <td colSpan="7" className="py-12 text-center text-[#8A8274]">
                     Loading staff directory...
                   </td>
                 </tr>
               ) : employees.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center text-slate-400">
+                  <td colSpan="7" className="py-12 text-center text-[#8A8274]">
                     No employees found. Click "Add Employee" to register staff.
                   </td>
                 </tr>
               ) : (
                 employees.map((emp) => (
-                  <tr key={emp._id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-4 px-6 font-mono font-bold text-indigo-700">
+                  <tr key={emp._id} className="hover:bg-[#EAE4D6]/40 transition-colors">
+                    <td className="py-4 px-6 font-mono font-bold text-[#1B3B34]">
                       {emp.employeeId}
                     </td>
                     <td className="py-4 px-4">
-                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                      <div className="font-bold text-[#23201B] flex items-center gap-1.5">
                         {emp.name}
                         {emp.role === 'admin' && (
-                          <span className="text-[10px] px-1.5 py-0.2 bg-purple-100 text-purple-700 rounded-full font-bold">
+                          <span className="text-[10px] px-2 py-0.5 bg-[#E2ECE6] text-[#1B3B34] border border-[#BCD3C5] rounded-full font-bold">
                             Admin
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-400">{emp.email}</div>
+                      <div className="text-[11px] text-[#5A5347]">{emp.email}</div>
                     </td>
-                    <td className="py-4 px-4 text-slate-700 font-medium">
+                    <td className="py-4 px-4 text-[#23201B] font-medium">
                       {emp.department}
                     </td>
-                    <td className="py-4 px-4 text-slate-600">
+                    <td className="py-4 px-4 text-[#5A5347]">
                       {emp.designation}
                     </td>
-                    <td className="py-4 px-4 text-slate-600 font-mono text-[11px]">
+                    <td className="py-4 px-4 text-[#5A5347] font-mono text-[11px]">
                       {emp.shiftStartTime} – {emp.shiftEndTime}
                     </td>
                     <td className="py-4 px-4">
@@ -281,26 +281,26 @@ export default function AdminEmployees() {
                         <button
                           type="button"
                           onClick={() => setReportModalData({ isOpen: true, employee: emp })}
-                          className="p-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#1B3B34] hover:text-[#C25E37] hover:bg-[#EAE4D6] rounded-lg transition-colors"
                           title={`Generate Attendance Excel Report for ${emp.name}`}
                         >
-                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                          <FileSpreadsheet className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(emp)}
-                          className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#5A5347] hover:text-[#1B3B34] hover:bg-[#EAE4D6] rounded-lg transition-colors"
                           title="Edit Employee"
                         >
-                          <Edit className="w-3.5 h-3.5" />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(emp._id, emp.name)}
-                          className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#8A8274] hover:text-[#B84030] hover:bg-[#F8ECE9] rounded-lg transition-colors"
                           title="Delete Employee"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -314,16 +314,16 @@ export default function AdminEmployees() {
 
       {/* Add / Edit Employee Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#23201B]/50 backdrop-blur-sm p-2 sm:p-4">
+          <div className="bg-[#FAF6EE] rounded-3xl shadow-2xl max-w-lg w-full max-h-[92vh] flex flex-col overflow-hidden border border-[#DCD4C4] animate-in fade-in zoom-in-95 duration-200">
             
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
-              <h3 className="text-base font-bold text-slate-800">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-[#FAF6EE] border-b border-[#DCD4C4] shrink-0">
+              <h3 className="text-base font-bold text-[#1B3B34]">
                 {editingEmployee ? 'Edit Employee Details' : 'Register New Employee'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
+                className="text-[#8A8274] hover:text-[#23201B] p-1.5 rounded-lg hover:bg-[#EAE4D6] transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -331,7 +331,7 @@ export default function AdminEmployees() {
 
             <form onSubmit={handleSubmitForm} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               {formError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center gap-2">
+                <div className="p-3 bg-[#F8ECE9] border border-[#E9C3BC] rounded-xl text-xs text-[#8A2418] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -339,7 +339,7 @@ export default function AdminEmployees() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Employee ID
                   </label>
                   <input
@@ -348,11 +348,11 @@ export default function AdminEmployees() {
                     disabled={Boolean(editingEmployee)}
                     value={formData.employeeId}
                     onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 uppercase font-mono disabled:opacity-60"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] uppercase font-mono disabled:opacity-60"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Full Name
                   </label>
                   <input
@@ -360,14 +360,14 @@ export default function AdminEmployees() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Work Email
                   </label>
                   <input
@@ -375,11 +375,11 @@ export default function AdminEmployees() {
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Password {editingEmployee && '(leave blank to keep unchanged)'}
                   </label>
                   <input
@@ -387,14 +387,14 @@ export default function AdminEmployees() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder={editingEmployee ? '••••••••' : 'Enter password'}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Department
                   </label>
                   <select
@@ -415,7 +415,7 @@ export default function AdminEmployees() {
                       else if (dept === 'Digital Marketing') desig = 'Digital Marketing Strategist';
                       setFormData({ ...formData, department: dept, designation: desig });
                     }}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="Full Stack Development">Full Stack Development</option>
                     <option value="UI/UX Design">UI/UX Design</option>
@@ -431,7 +431,7 @@ export default function AdminEmployees() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Designation / Title
                   </label>
                   <input
@@ -439,7 +439,7 @@ export default function AdminEmployees() {
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
                     placeholder="e.g. Full Stack Developer"
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
               </div>
@@ -447,20 +447,20 @@ export default function AdminEmployees() {
               {/* Role Selection (Administrator vs Employee) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Account Role / Access
                   </label>
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-semibold text-slate-800"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] font-semibold text-[#23201B]"
                   >
                     <option value="employee">👤 Employee (Staff)</option>
                     <option value="admin">🛡️ Administrator (Full Admin Access)</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Phone Number (Optional)
                   </label>
                   <input
@@ -468,14 +468,14 @@ export default function AdminEmployees() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+91 98765 43210"
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Shift Start (24hr HH:MM)
                   </label>
                   <input
@@ -483,11 +483,11 @@ export default function AdminEmployees() {
                     value={formData.shiftStartTime}
                     onChange={(e) => setFormData({ ...formData, shiftStartTime: e.target.value })}
                     placeholder="09:30"
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Shift End (24hr HH:MM)
                   </label>
                   <input
@@ -495,20 +495,20 @@ export default function AdminEmployees() {
                     value={formData.shiftEndTime}
                     onChange={(e) => setFormData({ ...formData, shiftEndTime: e.target.value })}
                     placeholder="18:30"
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] font-mono"
                   />
                 </div>
               </div>
 
               {editingEmployee && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                     Account Status
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive (Deactivated)</option>
@@ -520,14 +520,14 @@ export default function AdminEmployees() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+                  className="px-4 py-2 text-xs font-semibold text-[#5A5347] hover:text-[#23201B] transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl shadow-md shadow-amber-500/25 uppercase tracking-wider"
+                  className="bg-[#C25E37] hover:bg-[#AA4F2C] disabled:opacity-50 text-[#FAF6EE] font-bold text-xs px-5 py-2.5 rounded-xl shadow-warm-sm transition-all active:scale-95 border border-[#A74E2B]"
                 >
                   {submitting
                     ? 'Saving...'

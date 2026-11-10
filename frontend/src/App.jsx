@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F5EE]/80 flex flex-col selection:bg-amber-400 selection:text-slate-950">
+    <div className="min-h-screen bg-[#F1EDE4] flex flex-col selection:bg-[#C25E37] selection:text-[#FAF6EE]">
       <Navbar />
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <Sidebar />

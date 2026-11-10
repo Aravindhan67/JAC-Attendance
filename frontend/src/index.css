@@ -5,164 +5,92 @@
 @layer base {
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #F8F7F4;
-    color: #0f172a;
+    background-color: #F1EDE4;
+    color: #23201B;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    background-image: 
-      radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.025) 0px, transparent 40%),
-      radial-gradient(at 100% 0%, rgba(197, 160, 89, 0.02) 0px, transparent 40%);
-    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: #C25E37;
+    color: #FAF6EE;
   }
 }
 
-/* Premium Scrollbars */
+/* Warm Editorial Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #F1EDE4;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #D8CFBE;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #BFAF9B;
 }
 
-/* Luxury Keyframes & Animations */
-@keyframes cosmicOrbit {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+/* Bespoke Human Craft Cards & Containers */
+.paper-card {
+  background-color: #FAF6EE;
+  border: 1px solid #DCD4C4;
+  box-shadow: 0 1px 3px rgba(35, 32, 27, 0.04), 0 4px 12px rgba(35, 32, 27, 0.02);
 }
 
-@keyframes reverseOrbit {
-  0% {
-    transform: rotate(360deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
+.paper-card-elevated {
+  background-color: #FCF9F2;
+  border: 1px solid #D8CFBE;
+  box-shadow: 0 4px 16px rgba(35, 32, 27, 0.06), 0 1px 3px rgba(35, 32, 27, 0.03);
 }
 
-@keyframes floatSlow {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
-  }
-  50% {
-    transform: translateY(-8px) scale(1.02);
-  }
+.paper-input {
+  background-color: #EAE4D6;
+  border: 1px solid #DCD4C4;
+  color: #23201B;
+}
+.paper-input:focus {
+  background-color: #FAF6EE;
+  border-color: #C25E37;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(194, 94, 55, 0.15);
 }
 
-@keyframes laserShimmer {
-  0% {
-    transform: translateX(-100%) skewX(-15deg);
-  }
-  100% {
-    transform: translateX(200%) skewX(-15deg);
-  }
+/* Gentle transitions for human feel */
+.btn-terracotta {
+  background-color: #C25E37;
+  color: #FAF6EE;
+  transition: all 0.15s ease-in-out;
+}
+.btn-terracotta:hover {
+  background-color: #AA4F2C;
+  transform: translateY(-0.5px);
+}
+.btn-terracotta:active {
+  transform: translateY(0.5px);
 }
 
-@keyframes pulseGlow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-    filter: blur(20px);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.08);
-    filter: blur(28px);
-  }
+.btn-forest {
+  background-color: #1B3B34;
+  color: #FAF6EE;
+  transition: all 0.15s ease-in-out;
+}
+.btn-forest:hover {
+  background-color: #142E28;
+  transform: translateY(-0.5px);
 }
 
-@keyframes gradientShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+.btn-sand {
+  background-color: #EAE4D6;
+  color: #23201B;
+  border: 1px solid #DCD4C4;
+  transition: all 0.15s ease-in-out;
 }
-
-.animate-cosmic-orbit {
-  animation: cosmicOrbit 4s linear infinite;
+.btn-sand:hover {
+  background-color: #DFD7C7;
 }
-
-.animate-reverse-orbit {
-  animation: reverseOrbit 6s linear infinite;
-}
-
-.animate-float-slow {
-  animation: floatSlow 4s ease-in-out infinite;
-}
-
-.animate-laser-shimmer {
-  animation: laserShimmer 2.5s infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulseGlow 3s ease-in-out infinite;
-}
-
-.animate-gradient-shift {
-  background-size: 200% 200%;
-  animation: gradientShift 6s ease infinite;
-}
-
-/* Glassmorphism Classes */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.glass-dark {
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.glass-luxury {
-  background: rgba(10, 15, 29, 0.82);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-}
-
-/* Premium Matte Gold Utilities */
-.gold-gradient-bg {
-  background: linear-gradient(135deg, #B38728 0%, #D4AF37 50%, #C59B27 100%);
-}
-
-.gold-metallic-bg {
-  background: linear-gradient(135deg, #A2771E 0%, #D4AF37 50%, #8C6415 100%);
-}
-
-.text-gold-gradient {
-  background: linear-gradient(to right, #FFFFFF 0%, #F5E8BA 40%, #D4AF37 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gold-pure {
-  color: #D4AF37;
-}
-
-.gold-border {
-  border-color: rgba(212, 175, 55, 0.3);
-}
-

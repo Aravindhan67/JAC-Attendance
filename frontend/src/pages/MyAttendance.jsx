@@ -46,19 +46,19 @@ export default function MyAttendance() {
       {/* Page Title & Month Picker */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">My Attendance History</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-2xl font-black text-[#1B3B34] tracking-tight">My Attendance History</h1>
+          <p className="text-xs text-[#5A5347] mt-0.5 font-medium">
             View daily punches, verified photos, and total hours worked
           </p>
         </div>
 
         {/* Month Selector */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-200/80 shadow-xs">
-          <Calendar className="w-4 h-4 text-amber-500" />
+        <div className="flex items-center gap-2 bg-[#FAF6EE] px-3.5 py-2 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+          <Calendar className="w-4 h-4 text-[#C25E37]" />
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="text-xs font-semibold text-slate-700 bg-transparent focus:outline-none cursor-pointer"
+            className="text-xs font-bold text-[#23201B] bg-transparent focus:outline-none cursor-pointer"
           >
             {monthNames.map((name, i) => (
               <option key={name} value={i + 1}>
@@ -69,7 +69,7 @@ export default function MyAttendance() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="text-xs font-semibold text-slate-700 bg-transparent focus:outline-none cursor-pointer border-l border-slate-200 pl-2"
+            className="text-xs font-bold text-[#23201B] bg-transparent focus:outline-none cursor-pointer border-l border-[#DCD4C4] pl-2"
           >
             {[2025, 2026, 2027].map((yr) => (
               <option key={yr} value={yr}>
@@ -84,37 +84,37 @@ export default function MyAttendance() {
       {stats && (
         <div className="space-y-3">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Days Logged</span>
-              <div className="text-xl font-black text-slate-800 mt-0.5">{stats.totalDays}</div>
+            <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+              <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Days Logged</span>
+              <div className="text-xl font-black text-[#1B3B34] mt-0.5">{stats.totalDays}</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Present</span>
-              <div className="text-xl font-black text-emerald-600 mt-0.5">{stats.totalPresent}</div>
+            <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+              <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Present</span>
+              <div className="text-xl font-black text-[#1B3B34] mt-0.5">{stats.totalPresent}</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Late Punches</span>
-              <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalLate}</div>
+            <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+              <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Late Punches</span>
+              <div className="text-xl font-black text-[#9C6500] mt-0.5">{stats.totalLate}</div>
             </div>
-            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Total Hours</span>
-              <div className="text-xl font-black text-amber-600 mt-0.5">{stats.totalHours} hrs</div>
+            <div className="bg-[#FAF6EE] p-4 rounded-2xl border border-[#DCD4C4] shadow-warm-sm">
+              <span className="text-[#8A8274] text-[11px] font-bold uppercase tracking-wider">Total Hours</span>
+              <div className="text-xl font-black text-[#C25E37] mt-0.5">{stats.totalHours} hrs</div>
             </div>
           </div>
 
           {/* Monthly Late & Forgot Punch Passes Banner */}
           {exceptionQuota && (
-            <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="bg-[#F6EFE2] border border-[#DFCBB5] rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-warm-sm">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span className="font-extrabold text-amber-950">
+                <span className="w-2 h-2 rounded-full bg-[#C25E37]" />
+                <span className="font-black text-[#8F5413]">
                   Late & Forgot Check-In Allowance:
                 </span>
-                <span className="font-bold text-amber-800">
+                <span className="font-bold text-[#8F5413]">
                   {exceptionQuota.used} of 3 used this month ({exceptionQuota.remaining} remaining)
                 </span>
               </div>
-              <span className="text-[11px] text-amber-900/70 font-semibold">
+              <span className="text-[11px] text-[#8F5413]/80 font-semibold">
                 Refreshes automatically to 3 on the 1st of every month
               </span>
             </div>
@@ -123,10 +123,10 @@ export default function MyAttendance() {
       )}
 
       {/* Attendance Log Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-[#FAF6EE] rounded-3xl border border-[#DCD4C4] shadow-warm-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px] font-bold border-b border-slate-100">
+            <thead className="bg-[#EAE4D6]/70 text-[#5A5347] uppercase tracking-wider text-[10px] font-bold border-b border-[#DCD4C4]">
               <tr>
                 <th className="py-3.5 px-6">Date</th>
                 <th className="py-3.5 px-4">Status</th>
@@ -137,23 +137,23 @@ export default function MyAttendance() {
                 <th className="py-3.5 px-6">Remarks / Note</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#DCD4C4]/60">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center text-slate-400">
+                  <td colSpan="7" className="py-12 text-center text-[#8A8274]">
                     Loading attendance history...
                   </td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center text-slate-400">
+                  <td colSpan="7" className="py-12 text-center text-[#8A8274]">
                     No attendance records found for this period.
                   </td>
                 </tr>
               ) : (
                 records.map((r) => (
-                  <tr key={r._id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-4 px-6 font-semibold text-slate-800">
+                  <tr key={r._id} className="hover:bg-[#EAE4D6]/40 transition-colors">
+                    <td className="py-4 px-6 font-semibold text-[#23201B]">
                       {new Date(r.date).toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
@@ -164,13 +164,13 @@ export default function MyAttendance() {
                       <div className="flex flex-col items-start gap-1">
                         <StatusBadge status={r.status} />
                         {r.clockIn?.location && (
-                          <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          <span className="text-[10px] font-semibold text-[#5A5347] bg-[#EAE4D6] px-1.5 py-0.5 rounded border border-[#DCD4C4]">
                             {r.clockIn.location}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-slate-700 font-medium">
+                    <td className="py-4 px-4 text-[#23201B] font-mono text-[11px]">
                       {r.clockIn?.timestamp
                         ? new Date(r.clockIn.timestamp).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -178,7 +178,7 @@ export default function MyAttendance() {
                           })
                         : '—'}
                     </td>
-                    <td className="py-4 px-4 text-slate-700 font-medium">
+                    <td className="py-4 px-4 text-[#23201B] font-mono text-[11px]">
                       {r.clockOut?.timestamp
                         ? new Date(r.clockOut.timestamp).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -186,7 +186,7 @@ export default function MyAttendance() {
                           })
                         : '—'}
                     </td>
-                    <td className="py-4 px-4 font-bold text-slate-800">
+                    <td className="py-4 px-4 font-bold text-[#23201B]">
                       {r.totalHours > 0 ? `${r.totalHours} hrs` : '—'}
                     </td>
                     <td className="py-4 px-4 text-center">
@@ -201,19 +201,19 @@ export default function MyAttendance() {
                               date: r.date,
                             })
                           }
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold text-[11px] transition-colors"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#EAE4D6] text-[#1B3B34] hover:bg-[#DCD4C4] font-bold text-[11px] transition-colors border border-[#DCD4C4]"
                         >
-                          <Camera className="w-3.5 h-3.5" />
+                          <Camera className="w-3.5 h-3.5 text-[#C25E37]" />
                           View Photo
                         </button>
                       ) : (
-                        <span className="text-slate-400 text-[11px]">No Photo</span>
+                        <span className="text-[#8A8274] text-[11px]">No Photo</span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-slate-500">
+                    <td className="py-4 px-6 text-[#5A5347]">
                       <div className="flex flex-col gap-1 items-start">
                         {((r.exceptionType && r.exceptionType !== 'none') || (r.clockIn?.punchType && r.clockIn.punchType !== 'Regular')) && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-black bg-amber-100 text-amber-950 border border-amber-300">
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#F6EFE2] text-[#8F5413] border border-[#DFCBB5]">
                             {r.exceptionType && r.exceptionType !== 'none' ? r.exceptionType : r.clockIn?.punchType}
                           </span>
                         )}

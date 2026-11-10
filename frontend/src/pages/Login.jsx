@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Lock, Mail, AlertCircle, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import LogoLoading from '../components/LogoLoading';
 
 export default function Login() {
@@ -26,16 +26,15 @@ export default function Login() {
       setWelcomeName(data.user?.name || '');
       setIsSuccess(true);
 
-      // Display animated logo loading for 2.2 seconds before navigating to dashboard
       setTimeout(() => {
         if (data.user.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/');
         }
-      }, 2200);
+      }, 1800);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.');
+      setError(err.response?.data?.message || err.message || 'Login failed. Please verify your credentials.');
       setLoading(false);
     }
   };
@@ -46,61 +45,49 @@ export default function Login() {
       <LogoLoading
         message={
           welcomeName
-            ? `Welcome back, ${welcomeName}! Preparing your workspace...`
-            : 'Authentication successful! Loading workspace...'
+            ? `Welcome back, ${welcomeName}! Loading your workspace...`
+            : 'Authentication verified. Preparing portal...'
         }
       />
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-[#070709] flex items-center justify-center p-4 overflow-hidden select-none">
+    <div className="min-h-screen bg-[#EDE7DC] flex flex-col items-center justify-center p-4 selection:bg-[#C25E37] selection:text-[#FAF6EE]">
       
-      {/* Ambient Premium Gold Glow Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/15 rounded-full filter blur-[120px] animate-pulse-glow pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[420px] h-[420px] bg-yellow-600/15 rounded-full filter blur-[140px] animate-pulse-glow [animation-delay:2s] pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-700/10 rounded-full filter blur-[160px] pointer-events-none" />
-
-      {/* Subtle Digital Grid Matrix Texture */}
-      <div
-        className="absolute inset-0 opacity-[0.035] pointer-events-none"
-        style={{
-          backgroundImage: `radial-gradient(rgba(245, 158, 11, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '24px 24px',
-        }}
-      />
-
-      {/* Luxury Form Card - Dark Obsidian with Polished Gold Accents */}
-      <div className="relative z-10 max-w-md w-full bg-slate-900/90 backdrop-blur-2xl rounded-3xl shadow-[0_25px_60px_rgba(0,0,0,0.8)] p-8 sm:p-9 border border-amber-500/30 hover:border-amber-400/50 transition-all duration-300">
+      {/* Handcrafted Studio Card */}
+      <div className="max-w-md w-full bg-[#FAF6EE] rounded-2xl shadow-[0_4px_24px_rgba(35,32,27,0.06),0_1px_3px_rgba(35,32,27,0.04)] p-8 sm:p-10 border border-[#DCD4C4] transition-all">
         
-        {/* Top Header */}
-        <div className="text-center mb-7">
-          <div className="relative inline-block mb-3 group">
-            {/* Ambient gold logo glow */}
-            <div className="absolute -inset-1.5 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 opacity-40 blur-md group-hover:opacity-75 transition duration-500" />
-            <div className="relative w-20 h-20 mx-auto rounded-2xl bg-black p-2 shadow-2xl border-2 border-amber-400/50 flex items-center justify-center overflow-hidden">
-              <img
-                src="/logo.jpg"
-                alt="JAC MediaLand Logo"
-                className="w-full h-full object-contain transform group-hover:scale-105 transition duration-300 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
-              />
-            </div>
+        {/* Top Brand Block */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FAF6EE] p-1.5 border border-[#DCD4C4] shadow-xs flex items-center justify-center mb-3.5 overflow-hidden">
+            <img
+              src="/logo.jpg"
+              alt="JAC MediaLand Logo"
+              className="w-full h-full object-contain rounded-xl"
+            />
           </div>
-          <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-300 tracking-tight">
+
+          <h1 className="text-2xl font-black text-[#1B3B34] tracking-tight">
             JAC MediaLand
-          </h2>
-          <div className="inline-flex items-center gap-1.5 mt-1 px-3 py-0.5 rounded-full bg-amber-500/10 border border-amber-400/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_6px_rgba(251,191,36,0.9)]" />
-            <p className="text-[11px] text-amber-300 font-extrabold tracking-wider uppercase">
-              DREAM ZONE • IT PORTAL
-            </p>
+          </h1>
+
+          <div className="inline-flex items-center gap-1.5 mt-1.5 px-3 py-0.5 rounded-full bg-[#E2ECE6] border border-[#BCD3C5]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1B3B34]" />
+            <span className="text-[10px] text-[#1B3B34] font-extrabold tracking-widest uppercase">
+              Staff & Attendance Portal
+            </span>
           </div>
+
+          <p className="text-xs text-[#5A5347] mt-2 font-medium">
+            Sign in with your employee credentials or administrative key
+          </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3.5 bg-rose-950/50 border border-rose-500/40 rounded-xl flex items-center gap-2.5 text-xs text-rose-300 animate-in fade-in slide-in-from-top-1">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="mb-5 p-3.5 bg-[#FAF0ED] border border-[#EAC7BF] rounded-xl flex items-center gap-2.5 text-xs text-[#9C3F2B] font-semibold">
+            <AlertCircle className="w-4 h-4 shrink-0 text-[#C25E37]" />
             <span>{error}</span>
           </div>
         )}
@@ -108,40 +95,40 @@ export default function Login() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-amber-100/90 mb-1.5">
-              Email or Employee ID
+            <label className="block text-xs font-bold text-[#23201B] mb-1.5">
+              Employee ID or Work Email
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-amber-400/60 absolute left-3.5 top-3" />
+              <Mail className="w-4 h-4 text-[#8A8274] absolute left-3.5 top-3" />
               <input
                 type="text"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. JAC-007 or rahul@jacmedia.com"
-                className="w-full text-xs pl-10 pr-4 py-2.5 bg-black/50 border border-amber-500/25 rounded-xl focus:bg-black focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all font-medium text-amber-50 placeholder:text-slate-500"
+                placeholder="e.g. JAC-007 or name@jacmedia.com"
+                className="w-full text-xs pl-10 pr-4 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]/20 focus:border-[#C25E37] transition-all font-medium text-[#23201B] placeholder:text-[#8A8274]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-amber-100/90 mb-1.5">
+            <label className="block text-xs font-bold text-[#23201B] mb-1.5">
               Password
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-amber-400/60 absolute left-3.5 top-3" />
+              <Lock className="w-4 h-4 text-[#8A8274] absolute left-3.5 top-3" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full text-xs pl-10 pr-11 py-2.5 bg-black/50 border border-amber-500/25 rounded-xl focus:bg-black focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition-all font-medium text-amber-50 placeholder:text-slate-500"
+                className="w-full text-xs pl-10 pr-11 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]/20 focus:border-[#C25E37] transition-all font-medium text-[#23201B] placeholder:text-[#8A8274]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 p-1 text-amber-400/60 hover:text-amber-300 rounded-lg hover:bg-white/5 transition-colors"
+                className="absolute right-3 top-2.5 p-1 text-[#8A8274] hover:text-[#23201B] rounded-lg transition-colors"
                 title={showPassword ? 'Hide password' : 'View password'}
               >
                 {showPassword ? (
@@ -156,21 +143,25 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 bg-gradient-to-r from-[#B38728] via-[#D4AF37] to-[#C59B27] hover:from-[#A2771E] hover:to-[#B38728] disabled:opacity-50 text-slate-950 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 tracking-wide uppercase"
+            className="w-full mt-2 bg-[#C25E37] hover:bg-[#AA4F2C] disabled:opacity-50 text-[#FAF6EE] font-extrabold py-3 rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition-all duration-150 tracking-wide uppercase active:scale-[0.99]"
           >
-            {loading ? 'Authenticating...' : 'Sign In to Portal'}
-            <ArrowRight className="w-4 h-4 text-slate-950 stroke-[3]" />
+            {loading ? 'Authenticating...' : 'Sign In to Workspace'}
+            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </form>
 
-        {/* Security watermark */}
-        <div className="mt-6 text-center">
-          <p className="text-[10px] text-amber-400/50 font-medium">
-            Protected by JAC Multi-Tenant Biometric & Cloud Architecture
-          </p>
+        {/* Security badge footer */}
+        <div className="mt-8 pt-5 border-t border-[#DCD4C4]/60 flex items-center justify-center gap-2 text-[#8A8274] text-[11px]">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#1B3B34]" />
+          <span>Facial verification & shift policy enforced</span>
         </div>
 
       </div>
+
+      <div className="mt-6 text-center text-[11px] text-[#8A8274]">
+        JAC MediaLand • IT Hub & Workforce Operations
+      </div>
+
     </div>
   );
 }

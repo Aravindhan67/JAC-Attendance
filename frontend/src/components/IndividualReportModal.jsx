@@ -240,18 +240,18 @@ export default function IndividualReportModal({
   const summary = reportData?.summary;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-3xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+      <div className="bg-[#FAF6EE] rounded-2xl max-w-xl w-full border border-[#DCD4C4] shadow-warm-lg overflow-hidden flex flex-col max-h-[90vh]">
         
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-emerald-700 via-emerald-800 to-teal-900 p-5 text-white flex items-center justify-between shrink-0">
+        <div className="bg-[#1B3B34] p-5 text-[#FAF6EE] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-xl bg-[#142E28] border border-[#234A42] flex items-center justify-center text-[#FAF6EE]">
               <FileSpreadsheet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-base">Individual Employee Attendance Report</h3>
-              <p className="text-emerald-100 text-[11px]">
+              <h3 className="font-black text-base text-[#FAF6EE]">Individual Employee Attendance Report</h3>
+              <p className="text-[#D8E6DF] text-[11px]">
                 Export audit-grade Excel (.xlsx) file with daily breakdown & metrics
               </p>
             </div>
@@ -259,7 +259,7 @@ export default function IndividualReportModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-1.5 rounded-xl bg-black/15 hover:bg-black/25 text-[#FAF6EE] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -269,22 +269,22 @@ export default function IndividualReportModal({
         <div className="p-6 space-y-5 overflow-y-auto">
           
           {errorMsg && (
-            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 rounded-xl bg-[#FAF0ED] border border-[#EAC7BF] text-[#9C3F2B] text-xs flex items-center gap-2 font-semibold">
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#C25E37]" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {/* 1. Employee Selection */}
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-              <UserIcon className="w-3.5 h-3.5 text-emerald-600" />
+            <label className="text-xs font-black text-[#23201B] flex items-center gap-1.5">
+              <UserIcon className="w-3.5 h-3.5 text-[#1B3B34]" />
               Select Employee
             </label>
             <select
               value={selectedEmpId}
               onChange={(e) => setSelectedEmpId(e.target.value)}
-              className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full text-xs p-3 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl font-bold text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]/20 focus:border-[#C25E37] cursor-pointer"
             >
               {employees.map((emp) => (
                 <option key={emp._id} value={emp._id}>
@@ -296,8 +296,8 @@ export default function IndividualReportModal({
 
           {/* 2. Date Range Presets & Inputs */}
           <div className="space-y-2">
-            <label className="text-xs font-black text-slate-700 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-emerald-600" />
+            <label className="text-xs font-black text-[#23201B] flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5 text-[#1B3B34]" />
               Reporting Period
             </label>
             
@@ -315,8 +315,8 @@ export default function IndividualReportModal({
                   onClick={() => handlePresetChange(p.id)}
                   className={`py-1.5 text-xs font-bold rounded-xl border transition-all ${
                     rangePreset === p.id
-                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#1B3B34] text-[#FAF6EE] border-[#1B3B34] shadow-xs'
+                      : 'bg-[#EAE4D6] text-[#5A5347] border-[#DCD4C4] hover:bg-[#DCD4C4]'
                   }`}
                 >
                   {p.label}
@@ -327,7 +327,7 @@ export default function IndividualReportModal({
             {/* Custom Date Pickers */}
             <div className="grid grid-cols-2 gap-3 pt-1">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block mb-1">START DATE</span>
+                <span className="text-[10px] font-bold text-[#8A8274] block mb-1">START DATE</span>
                 <input
                   type="date"
                   value={startDate}
@@ -335,11 +335,11 @@ export default function IndividualReportModal({
                     setRangePreset('custom');
                     setStartDate(e.target.value);
                   }}
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs p-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl font-semibold text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]/20 focus:border-[#C25E37]"
                 />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 block mb-1">END DATE</span>
+                <span className="text-[10px] font-bold text-[#8A8274] block mb-1">END DATE</span>
                 <input
                   type="date"
                   value={endDate}
@@ -347,20 +347,20 @@ export default function IndividualReportModal({
                     setRangePreset('custom');
                     setEndDate(e.target.value);
                   }}
-                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full text-xs p-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl font-semibold text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]/20 focus:border-[#C25E37]"
                 />
               </div>
             </div>
           </div>
 
           {/* 3. Live Preview & Statistics Card */}
-          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
-              <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider">
+          <div className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between border-b border-[#DCD4C4] pb-2.5">
+              <span className="text-[11px] font-black uppercase text-[#8A8274] tracking-wider">
                 Report Preview
               </span>
               {loadingPreview && (
-                <span className="text-[11px] text-emerald-600 font-bold flex items-center gap-1">
+                <span className="text-[11px] text-[#1B3B34] font-bold flex items-center gap-1">
                   <RefreshCw className="w-3 h-3 animate-spin" />
                   Calculating...
                 </span>
@@ -369,15 +369,15 @@ export default function IndividualReportModal({
 
             {currentEmployee && (
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 font-black flex items-center justify-center text-sm shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-[#FAF6EE] border border-[#DCD4C4] text-[#1B3B34] font-black flex items-center justify-center text-sm shrink-0">
                   {currentEmployee.name?.charAt(0) || 'E'}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-black text-slate-800 truncate">
+                  <div className="text-sm font-black text-[#23201B] truncate">
                     {currentEmployee.name}
                   </div>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                    <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                  <div className="text-[11px] text-[#5A5347] flex items-center gap-2">
+                    <span className="font-mono font-bold text-[#1B3B34] bg-[#FAF6EE] px-1.5 py-0.2 rounded border border-[#DCD4C4]">
                       {currentEmployee.employeeId}
                     </span>
                     <span>•</span>
@@ -390,40 +390,40 @@ export default function IndividualReportModal({
             {/* Metrics Grid */}
             {summary ? (
               <div className="grid grid-cols-4 gap-2 pt-1 text-center">
-                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Present</div>
-                  <div className="text-base font-black text-emerald-600">{summary.totalPresent}</div>
+                <div className="bg-[#FAF6EE] p-2.5 rounded-xl border border-[#DCD4C4] shadow-xs">
+                  <div className="text-[10px] font-bold text-[#8A8274] uppercase">Present</div>
+                  <div className="text-base font-black text-[#1B3B34]">{summary.totalPresent}</div>
                 </div>
-                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Late</div>
-                  <div className="text-base font-black text-amber-600">{summary.totalLate}</div>
+                <div className="bg-[#FAF6EE] p-2.5 rounded-xl border border-[#DCD4C4] shadow-xs">
+                  <div className="text-[10px] font-bold text-[#8A8274] uppercase">Late</div>
+                  <div className="text-base font-black text-[#B88B42]">{summary.totalLate}</div>
                 </div>
-                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Half-Day</div>
-                  <div className="text-base font-black text-orange-600">{summary.totalHalfDay}</div>
+                <div className="bg-[#FAF6EE] p-2.5 rounded-xl border border-[#DCD4C4] shadow-xs">
+                  <div className="text-[10px] font-bold text-[#8A8274] uppercase">Half-Day</div>
+                  <div className="text-base font-black text-[#C25E37]">{summary.totalHalfDay}</div>
                 </div>
-                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase">Work Hours</div>
-                  <div className="text-base font-black text-slate-800">{summary.totalHours}h</div>
+                <div className="bg-[#FAF6EE] p-2.5 rounded-xl border border-[#DCD4C4] shadow-xs">
+                  <div className="text-[10px] font-bold text-[#8A8274] uppercase">Work Hours</div>
+                  <div className="text-base font-black text-[#23201B]">{summary.totalHours}h</div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4 text-xs text-slate-400">
+              <div className="text-center py-4 text-xs text-[#8A8274]">
                 {loadingPreview ? 'Loading attendance data...' : 'No records logged in selected date range.'}
               </div>
             )}
 
             {/* Extra summary row */}
             {summary && (
-              <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1">
+              <div className="text-[11px] text-[#5A5347] flex items-center justify-between pt-1">
                 <span>
-                  Total Logs: <strong className="text-slate-700">{summary.totalDays} days</strong>
+                  Total Logs: <strong className="text-[#23201B]">{summary.totalDays} days</strong>
                 </span>
                 <span>
-                  Approved Leaves: <strong className="text-slate-700">{summary.totalLeaves}</strong>
+                  Approved Leaves: <strong className="text-[#23201B]">{summary.totalLeaves}</strong>
                 </span>
                 <span>
-                  Avg Daily: <strong className="text-slate-700">{summary.avgDailyHours} hrs/day</strong>
+                  Avg Daily: <strong className="text-[#23201B]">{summary.avgDailyHours} hrs/day</strong>
                 </span>
               </div>
             )}
@@ -432,11 +432,11 @@ export default function IndividualReportModal({
         </div>
 
         {/* Modal Footer Buttons */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5 shrink-0">
+        <div className="p-4 bg-[#EAE4D6] border-t border-[#DCD4C4] flex items-center justify-end gap-2.5 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-200/80 font-bold text-xs transition-colors"
+            className="px-4 py-2 rounded-xl border border-[#DCD4C4] text-[#5A5347] hover:bg-[#DCD4C4] font-bold text-xs transition-colors"
           >
             Cancel
           </button>
@@ -445,7 +445,7 @@ export default function IndividualReportModal({
             type="button"
             disabled={generating || loadingPreview || !currentEmployee}
             onClick={handleDownloadExcel}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-black text-xs shadow-md shadow-emerald-200 flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
+            className="px-5 py-2.5 rounded-xl bg-[#C25E37] hover:bg-[#AA4F2C] text-[#FAF6EE] font-black text-xs shadow-warm-sm flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
           >
             {generating ? (
               <RefreshCw className="w-4 h-4 animate-spin" />

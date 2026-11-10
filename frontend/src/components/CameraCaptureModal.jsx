@@ -135,24 +135,24 @@ export default function CameraCaptureModal({
   const showExceptionSelector = isException || actionType.includes('Late') || actionType.includes('Forgot');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[94vh] flex flex-col border border-slate-100 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#23201B]/60 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-[#FAF6EE] rounded-3xl shadow-warm-lg max-w-lg w-full max-h-[94vh] flex flex-col border border-[#DCD4C4] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 bg-[#FAF6EE] border-b border-[#DCD4C4] shrink-0">
           <div>
-            <h3 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
-              <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />
+            <h3 className="text-base sm:text-lg font-black text-[#1B3B34] flex items-center gap-2">
+              <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-[#C25E37]" />
               {actionType} Photo Verification
             </h3>
-            <p className="text-[11px] sm:text-xs text-slate-500">Capture selfie & verify work details</p>
+            <p className="text-[11px] sm:text-xs text-[#5A5347] font-medium">Capture selfie & verify work details</p>
           </div>
           <button
             onClick={() => {
               stopCamera();
               onClose();
             }}
-            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+            className="text-[#8A8274] hover:text-[#23201B] p-1.5 rounded-lg hover:bg-[#EAE4D6] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -163,13 +163,13 @@ export default function CameraCaptureModal({
           
           {/* Exception Selector if filing late or forgot punch */}
           {showExceptionSelector && (
-            <div className="w-full p-3.5 bg-amber-50 border border-amber-300/80 rounded-2xl space-y-2.5">
+            <div className="w-full p-3.5 bg-[#F6EFE2] border border-[#DFCBB5] rounded-2xl space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-black text-amber-950 flex items-center gap-1.5">
-                  <Clock className="w-4 h-4 text-amber-700" />
+                <span className="text-xs font-bold text-[#8F5413] flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-[#C25E37]" />
                   Select Exception Category
                 </span>
-                <span className="text-[10px] font-black bg-amber-200/90 text-amber-950 px-2.5 py-0.5 rounded-full border border-amber-300">
+                <span className="text-[10px] font-bold bg-[#EAE4D6] text-[#8F5413] px-2.5 py-0.5 rounded-full border border-[#DFCBB5]">
                   {remainingExceptions} of 3 allowances left
                 </span>
               </div>
@@ -179,8 +179,8 @@ export default function CameraCaptureModal({
                   onClick={() => setPunchType('Late Check-In')}
                   className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                     punchType === 'Late Check-In'
-                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border-amber-400 shadow-sm'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#1B3B34] text-[#FAF6EE] border-[#142C26] shadow-warm-sm'
+                      : 'bg-[#FAF6EE] text-[#5A5347] border-[#DCD4C4] hover:bg-[#EAE4D6]'
                   }`}
                 >
                   <span>🕒 Late Check-In</span>
@@ -190,20 +190,20 @@ export default function CameraCaptureModal({
                   onClick={() => setPunchType('Forgot Check-In')}
                   className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${
                     punchType === 'Forgot Check-In'
-                      ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 border-amber-400 shadow-sm'
-                      : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      ? 'bg-[#1B3B34] text-[#FAF6EE] border-[#142C26] shadow-warm-sm'
+                      : 'bg-[#FAF6EE] text-[#5A5347] border-[#DCD4C4] hover:bg-[#EAE4D6]'
                   }`}
                 >
                   <span>📝 Forgot Check-In</span>
                 </button>
               </div>
-              <p className="text-[10px] text-amber-900/80">
+              <p className="text-[10px] text-[#8F5413]/90">
                 Uses 1 of your 3 monthly exceptions. All 3 allowances refresh automatically on the 1st of every month.
               </p>
             </div>
           )}
 
-          <div className="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-amber-400/30">
+          <div className="relative w-full aspect-[4/3] bg-[#23201B] rounded-2xl overflow-hidden shadow-inner flex items-center justify-center border-2 border-[#DCD4C4]">
             {capturedPhoto ? (
               // Captured preview
               <img
@@ -213,11 +213,11 @@ export default function CameraCaptureModal({
               />
             ) : cameraError ? (
               // Error state with upload option
-              <div className="p-6 text-center text-slate-300 flex flex-col items-center gap-3">
-                <AlertTriangle className="w-10 h-10 text-amber-400" />
-                <p className="text-xs text-slate-300 max-w-xs">{cameraError}</p>
-                <label className="cursor-pointer bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 text-xs font-black px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-md shadow-amber-500/25">
-                  <ImageIcon className="w-4 h-4 stroke-[2.5]" />
+              <div className="p-6 text-center text-[#EAE4D6] flex flex-col items-center gap-3">
+                <AlertTriangle className="w-10 h-10 text-[#C25E37]" />
+                <p className="text-xs text-[#EAE4D6] max-w-xs">{cameraError}</p>
+                <label className="cursor-pointer bg-[#C25E37] hover:bg-[#AA4F2C] text-[#FAF6EE] text-xs font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-warm-sm">
+                  <ImageIcon className="w-4 h-4 stroke-[2]" />
                   Upload Photo From Device
                   <input
                     type="file"
@@ -239,14 +239,14 @@ export default function CameraCaptureModal({
                   className="w-full h-full object-cover transform -scale-x-100"
                 />
                 {loading && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
+                  <div className="absolute inset-0 bg-[#23201B]/80 flex items-center justify-center text-[#FAF6EE] text-xs gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-[#C25E37]" />
                     Starting Camera...
                   </div>
                 )}
                 {/* Visual reticle */}
-                <div className="absolute inset-8 border border-white/20 rounded-2xl pointer-events-none flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">
+                <div className="absolute inset-8 border border-white/25 rounded-2xl pointer-events-none flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white/60 tracking-widest uppercase">
                     Face Camera Directly
                   </span>
                 </div>
@@ -261,16 +261,16 @@ export default function CameraCaptureModal({
                 type="button"
                 onClick={handleCapture}
                 disabled={Boolean(cameraError) || loading}
-                className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-black px-6 py-2.5 rounded-xl shadow-md shadow-amber-500/25 hover:shadow-lg flex items-center gap-2 transition-all uppercase tracking-wider text-xs"
+                className="bg-[#C25E37] hover:bg-[#AA4F2C] disabled:opacity-50 text-[#FAF6EE] font-bold px-6 py-2.5 rounded-xl shadow-warm-sm hover:shadow-warm-md flex items-center gap-2 transition-all text-xs border border-[#A74E2B] active:scale-95"
               >
-                <Camera className="w-4 h-4 stroke-[2.5]" />
+                <Camera className="w-4 h-4 stroke-[2]" />
                 Snap Photo
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleRetake}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                className="bg-[#EAE4D6] hover:bg-[#DCD4C4] text-[#23201B] font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors border border-[#DCD4C4]"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Retake Photo
@@ -281,14 +281,14 @@ export default function CameraCaptureModal({
           {/* Work Mode Dropdown & Note / Reason */}
           <div className="w-full space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-amber-600" />
+              <label className="block text-xs font-semibold text-[#5A5347] mb-1 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#C25E37]" />
                 Work Mode / Location
               </label>
               <select
                 value={workMode}
                 onChange={(e) => setWorkMode(e.target.value)}
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800 cursor-pointer"
+                className="w-full text-xs px-3.5 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] font-medium cursor-pointer"
               >
                 <option value="Office">🏢 Office</option>
                 <option value="WFH">🏠 WFH (Work From Home)</option>
@@ -297,7 +297,7 @@ export default function CameraCaptureModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-semibold text-[#5A5347] mb-1">
                 {showExceptionSelector ? 'Reason / Explanation (Required for Exception)' : 'Remarks / Note (Optional)'}
               </label>
               <input
@@ -305,21 +305,21 @@ export default function CameraCaptureModal({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={showExceptionSelector ? 'e.g. Traffic jam on highway, forgot to punch at 9:30 AM...' : 'Add a remark...'}
-                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
+                className="w-full text-xs px-3.5 py-2.5 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37] font-medium"
               />
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-[#FAF6EE] border-t border-[#DCD4C4] flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => {
               stopCamera();
               onClose();
             }}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-[#5A5347] hover:text-[#23201B] transition-colors"
           >
             Cancel
           </button>
@@ -327,12 +327,12 @@ export default function CameraCaptureModal({
             type="button"
             onClick={handleConfirmSubmit}
             disabled={!capturedPhoto || isSubmitting}
-            className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 disabled:opacity-50 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-md shadow-amber-500/25 transition-all uppercase tracking-wider"
+            className="bg-[#C25E37] hover:bg-[#AA4F2C] disabled:opacity-50 text-[#FAF6EE] font-bold text-xs px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-warm-sm transition-all border border-[#A74E2B] active:scale-95"
           >
             {isSubmitting ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-slate-950" />
+              <RefreshCw className="w-4 h-4 animate-spin text-[#FAF6EE]" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+              <CheckCircle2 className="w-4 h-4 text-[#FAF6EE] stroke-[2]" />
             )}
             Confirm & {showExceptionSelector ? `${punchType}` : actionType}
           </button>
