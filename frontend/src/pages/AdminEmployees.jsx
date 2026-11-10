@@ -16,12 +16,14 @@ import {
   Briefcase,
   Clock,
   FileSpreadsheet,
+  Filter,
 } from 'lucide-react';
 
 export default function AdminEmployees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [toast, setToast] = useState(null);
@@ -43,10 +45,14 @@ export default function AdminEmployees() {
     shiftEndTime: '18:30',
   });
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (dept = departmentFilter) => {
     setLoading(true);
     try {
-      const res = await api.get(`/employees?search=${encodeURIComponent(search)}`);
+      let url = `/employees?search=${encodeURIComponent(search)}`;
+      if (dept && dept !== 'All') {
+        url += `&department=${encodeURIComponent(dept)}`;
+      }
+      const res = await api.get(url);
       if (res.data.success) {
         setEmployees(res.data.data);
       }
@@ -198,24 +204,54 @@ export default function AdminEmployees() {
         </div>
       </div>
 
-      {/* Search Input */}
-      <div className="bg-[#FAF6EE] p-3 rounded-2xl border border-[#DCD4C4] shadow-warm-sm flex items-center gap-2 max-w-md">
-        <Search className="w-4 h-4 text-[#8A8274] ml-1" />
-        <input
-          type="text"
-          placeholder="Search employees by name, ID or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
-          className="w-full text-xs text-[#23201B] placeholder-[#8A8274] bg-transparent focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={fetchEmployees}
-          className="bg-[#EAE4D6] hover:bg-[#DCD4C4] text-[#23201B] text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
-        >
-          Search
-        </button>
+      {/* Search & Department Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="bg-[#FAF6EE] p-3 rounded-2xl border border-[#DCD4C4] shadow-warm-sm flex items-center gap-2 max-w-md flex-1">
+          <Search className="w-4 h-4 text-[#8A8274] ml-1" />
+          <input
+            type="text"
+            placeholder="Search employees by name, ID or email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchEmployees()}
+            className="w-full text-xs text-[#23201B] placeholder-[#8A8274] bg-transparent focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => fetchEmployees()}
+            className="bg-[#EAE4D6] hover:bg-[#DCD4C4] text-[#23201B] text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+          >
+            Search
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2 bg-[#FAF6EE] border border-[#DCD4C4] rounded-2xl px-3 py-2 text-xs shadow-warm-sm">
+          <Filter className="w-3.5 h-3.5 text-[#5A5347]" />
+          <select
+            value={departmentFilter}
+            onChange={(e) => {
+              const selectedDept = e.target.value;
+              setDepartmentFilter(selectedDept);
+              fetchEmployees(selectedDept);
+            }}
+            className="bg-transparent text-[#23201B] font-semibold focus:outline-none cursor-pointer"
+          >
+            <option value="All">All Departments</option>
+            <option value="Business Development (BDA)">Business Development (BDA)</option>
+            <option value="Business Development">Business Development</option>
+            <option value="Full Stack Development">Full Stack Development</option>
+            <option value="UI/UX Design">UI/UX Design</option>
+            <option value="Frontend Development">Frontend Development</option>
+            <option value="Backend Development">Backend Development</option>
+            <option value="Mobile App Development">Mobile App Development</option>
+            <option value="QA & Testing">QA & Testing</option>
+            <option value="DevOps & Cloud">DevOps & Cloud</option>
+            <option value="IT & Tech Support">IT & Tech Support</option>
+            <option value="Administration">Administration</option>
+            <option value="Project Management">Project Management</option>
+            <option value="Digital Marketing">Digital Marketing</option>
+          </select>
+        </div>
       </div>
 
       {/* Employees Directory Table */}
@@ -402,7 +438,8 @@ export default function AdminEmployees() {
                     onChange={(e) => {
                       const dept = e.target.value;
                       let desig = formData.designation;
-                      if (dept === 'Full Stack Development') desig = 'Full Stack Developer';
+                      if (dept === 'Business Development (BDA)' || dept === 'Business Development') desig = 'Business Development Associate (BDA)';
+                      else if (dept === 'Full Stack Development') desig = 'Full Stack Developer';
                       else if (dept === 'UI/UX Design') desig = 'UI/UX Designer';
                       else if (dept === 'Frontend Development') desig = 'Frontend Developer';
                       else if (dept === 'Backend Development') desig = 'Backend Developer';
@@ -417,6 +454,8 @@ export default function AdminEmployees() {
                     }}
                     className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
+                    <option value="Business Development (BDA)">Business Development (BDA)</option>
+                    <option value="Business Development">Business Development</option>
                     <option value="Full Stack Development">Full Stack Development</option>
                     <option value="UI/UX Design">UI/UX Design</option>
                     <option value="Frontend Development">Frontend Development</option>
@@ -436,11 +475,28 @@ export default function AdminEmployees() {
                   </label>
                   <input
                     type="text"
+                    list="designation-options"
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    placeholder="e.g. Full Stack Developer"
+                    placeholder="e.g. Business Development Associate (BDA)"
                     className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] placeholder-[#8A8274] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   />
+                  <datalist id="designation-options">
+                    <option value="Business Development Associate (BDA)" />
+                    <option value="BDA" />
+                    <option value="Senior Business Development Associate" />
+                    <option value="Business Development Executive" />
+                    <option value="Full Stack Developer" />
+                    <option value="Frontend Developer" />
+                    <option value="Backend Developer" />
+                    <option value="UI/UX Designer" />
+                    <option value="QA Automation Engineer" />
+                    <option value="DevOps Engineer" />
+                    <option value="IT Specialist" />
+                    <option value="Administrator" />
+                    <option value="Project Manager" />
+                    <option value="Digital Marketing Strategist" />
+                  </datalist>
                 </div>
               </div>
 

@@ -297,6 +297,8 @@ export default function AdminTasks() {
           className="bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl px-3 py-2 text-xs font-bold text-[#23201B] focus:outline-none cursor-pointer"
         >
           <option value="All">All Departments</option>
+          <option value="Business Development (BDA)">Business Development (BDA)</option>
+          <option value="Business Development">Business Development</option>
           <option value="Full Stack Development">Full Stack Development</option>
           <option value="UI/UX Design">UI/UX Design</option>
           <option value="Frontend Development">Frontend Development</option>
@@ -535,6 +537,7 @@ export default function AdminTasks() {
                     className="w-full text-xs px-3 py-2 bg-[#EAE4D6] border border-[#DCD4C4] rounded-xl text-[#23201B] focus:bg-[#FAF6EE] focus:outline-none focus:ring-2 focus:ring-[#C25E37]"
                   >
                     <option value="Full Stack Dev">Full Stack Feature</option>
+                    <option value="Business Development">Business Development & Client Outreach (BDA)</option>
                     <option value="Frontend UI">Frontend UI / Component</option>
                     <option value="Backend API">Backend API / Database</option>
                     <option value="UI/UX Design">UI/UX Wireframe & Prototype</option>

@@ -403,6 +403,8 @@ export default function AdminAttendance() {
               className="bg-transparent text-[#23201B] font-semibold focus:outline-none cursor-pointer w-full"
             >
               <option value="All">All Departments</option>
+              <option value="Business Development (BDA)">Business Development (BDA)</option>
+              <option value="Business Development">Business Development</option>
               <option value="Full Stack Development">Full Stack Development</option>
               <option value="UI/UX Design">UI/UX Design</option>
               <option value="Frontend Development">Frontend Development</option>
