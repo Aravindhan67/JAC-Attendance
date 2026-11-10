@@ -1,20 +1,21 @@
-import * as XLSX from 'xlsx';
-
 /**
  * Generates and downloads a formatted Excel (.xlsx) report for an individual employee
+ * Uses dynamic import for 'xlsx' so the heavy library is never bundled into initial page load
  * @param {Object} employee - Employee object { name, employeeId, department, designation, email, phone, shiftStartTime, shiftEndTime }
  * @param {Array} records - Array of attendance records
  * @param {Object} summary - Summary statistics
  * @param {Array} leaves - Array of approved leaves
  * @param {Object} period - { startDate, endDate, label }
  */
-export const exportIndividualEmployeeExcel = ({
+export const exportIndividualEmployeeExcel = async ({
   employee,
   records = [],
   summary = {},
   leaves = [],
   period = {},
 }) => {
+  // Dynamically load SheetJS only on demand
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   // 1. Prepare Main Attendance Worksheet Data (Array of Arrays)

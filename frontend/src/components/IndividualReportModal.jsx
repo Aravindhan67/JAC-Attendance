@@ -203,7 +203,7 @@ export default function IndividualReportModal({
         label = monthDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       }
 
-      exportIndividualEmployeeExcel({
+      await exportIndividualEmployeeExcel({
         employee: currentEmp,
         records: reportData?.records || [],
         summary: reportData?.summary || {

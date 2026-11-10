@@ -1,20 +1,22 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import BottomNav from './components/BottomNav';
 import LogoLoading from './components/LogoLoading';
-import Login from './pages/Login';
-import EmployeeDashboard from './pages/EmployeeDashboard';
-import MyAttendance from './pages/MyAttendance';
-import MyLeaves from './pages/MyLeaves';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminAttendance from './pages/AdminAttendance';
-import AdminLeaves from './pages/AdminLeaves';
-import AdminEmployees from './pages/AdminEmployees';
-import MyTasks from './pages/MyTasks';
-import AdminTasks from './pages/AdminTasks';
+
+// Lazy-loaded route chunks to slash initial bundle size and boost Lighthouse score
+const Login = lazy(() => import('./pages/Login'));
+const EmployeeDashboard = lazy(() => import('./pages/EmployeeDashboard'));
+const MyAttendance = lazy(() => import('./pages/MyAttendance'));
+const MyLeaves = lazy(() => import('./pages/MyLeaves'));
+const MyTasks = lazy(() => import('./pages/MyTasks'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const AdminAttendance = lazy(() => import('./pages/AdminAttendance'));
+const AdminLeaves = lazy(() => import('./pages/AdminLeaves'));
+const AdminEmployees = lazy(() => import('./pages/AdminEmployees'));
+const AdminTasks = lazy(() => import('./pages/AdminTasks'));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -50,7 +52,8 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
+        <Suspense fallback={<LogoLoading message="Loading workspace..." />}>
+          <Routes>
           {/* Public Auth Route */}
           <Route path="/login" element={<Login />} />
 
@@ -133,8 +136,9 @@ export default function App() {
           {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Suspense>
+    </BrowserRouter>
+  </AuthProvider>
   );
 }
 
