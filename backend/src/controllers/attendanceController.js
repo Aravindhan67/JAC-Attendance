@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { saveBase64Image } = require('../utils/photoStorage');
@@ -8,6 +9,24 @@ const TIMEZONE = 'Asia/Kolkata';
 // Helper to get local date string YYYY-MM-DD in Asia/Kolkata
 const getTodayDateString = (date = new Date()) => {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(date);
+};
+
+// Helper to reliably normalize any date format (YYYY-MM-DD, DD/MM/YYYY, ISO) to YYYY-MM-DD
+const normalizeDateString = (input) => {
+  if (!input) return getTodayDateString();
+  const str = String(input).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+  const match = str.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+  if (match) {
+    return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+  }
+  const d = new Date(str);
+  if (!isNaN(d.getTime())) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: TIMEZONE }).format(d);
+  }
+  return getTodayDateString();
 };
 
 // Helper to get current minutes from midnight in Asia/Kolkata
@@ -517,7 +536,7 @@ exports.manualCheckIn = async (req, res) => {
   try {
     const {
       userId,
-      date, // YYYY-MM-DD
+      date, // YYYY-MM-DD or DD/MM/YYYY
       checkInTime, // e.g. "09:30" (24h format HH:MM)
       checkOutTime, // e.g. "18:30" (optional)
       status, // 'present' | 'late' | 'half-day' | 'absent'
@@ -526,26 +545,46 @@ exports.manualCheckIn = async (req, res) => {
       adminRemark = '',
     } = req.body;
 
-    if (!userId) {
+    if (!userId && !req.body.employeeId) {
       return res.status(400).json({ success: false, message: 'Please select an employee' });
     }
 
-    const employee = await User.findById(userId);
-    if (!employee) {
-      return res.status(404).json({ success: false, message: 'Employee not found' });
+    // Resilient employee resolution by Mongo ObjectId, employeeId, or name
+    let employee = null;
+    const lookupId = userId || req.body.employeeId;
+    if (mongoose.isValidObjectId(lookupId)) {
+      employee = await User.findById(lookupId);
+    }
+    if (!employee && req.body.employeeId) {
+      employee = await User.findOne({ employeeId: String(req.body.employeeId).trim() });
+    }
+    if (!employee && lookupId) {
+      employee = await User.findOne({ employeeId: String(lookupId).trim() });
+    }
+    if (!employee && lookupId) {
+      employee = await User.findOne({ name: String(lookupId).trim() });
     }
 
-    const targetDate = date || getTodayDateString(); // "YYYY-MM-DD"
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: `Employee "${lookupId}" not found in system. Please select a valid employee.`,
+      });
+    }
+
+    // Safely normalize date to YYYY-MM-DD
+    const targetDate = normalizeDateString(date);
     const shiftStart = employee.shiftStartTime || '09:30';
     const effectiveCheckInTime = checkInTime || shiftStart;
 
     // Helper to construct a local Date object in Asia/Kolkata (+05:30)
     const parseDateTime = (dateStr, timeStr) => {
       if (!timeStr) return null;
-      const [hStr, mStr] = timeStr.split(':');
+      const [hStr, mStr] = String(timeStr).split(':');
       const hh = String(hStr || '0').padStart(2, '0');
       const mm = String(mStr || '0').padStart(2, '0');
-      return new Date(`${dateStr}T${hh}:${mm}:00+05:30`);
+      const d = new Date(`${dateStr}T${hh}:${mm}:00+05:30`);
+      return isNaN(d.getTime()) ? new Date() : d;
     };
 
     const checkInDate = parseDateTime(targetDate, effectiveCheckInTime);
@@ -635,16 +674,23 @@ exports.manualCheckIn = async (req, res) => {
     }
 
     await record.save();
-    await record.populate('user', 'name employeeId department designation profileImage email');
+    try {
+      await record.populate('user', 'name employeeId department designation profileImage email');
+    } catch (popErr) {
+      console.warn('Populate notice:', popErr.message);
+    }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: `Successfully recorded manual attendance for ${employee.name} (${targetDate})`,
       data: record,
     });
   } catch (error) {
     console.error('[Manual Check-In Error]:', error);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Server error recording manual attendance',
+    });
   }
 };
 

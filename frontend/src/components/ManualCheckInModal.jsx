@@ -208,9 +208,17 @@ export default function ManualCheckInModal({
     setError('');
 
     try {
+      // Ensure date is formatted as YYYY-MM-DD
+      let normalizedDate = date;
+      const match = String(date).match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+      if (match) {
+        normalizedDate = `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
+      }
+
       const payload = {
-        userId: selectedUserId,
-        date,
+        userId: currentEmployee?._id || currentEmployee?.id || selectedUserId,
+        employeeId: currentEmployee?.employeeId,
+        date: normalizedDate,
         checkInTime,
         checkOutTime: checkOutTime || undefined,
         status,
@@ -229,10 +237,12 @@ export default function ManualCheckInModal({
       }
     } catch (err) {
       console.error('Manual checkin error:', err);
-      setError(
+      const serverMsg =
         err.response?.data?.message ||
-          'Failed to record manual attendance. Please check your inputs and try again.'
-      );
+        err.response?.data?.error ||
+        err.message ||
+        'Server communication issue. Please verify backend status and try again.';
+      setError(serverMsg);
     } finally {
       setSubmitting(false);
     }
