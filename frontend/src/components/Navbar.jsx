@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPhotoUrl } from '../api/client';
-import { LogOut, Clock, ShieldCheck, User } from 'lucide-react';
+import { LogOut, Clock, ShieldCheck, User, Menu } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
@@ -17,8 +17,19 @@ export default function Navbar() {
     <header className="sticky top-0 z-30 bg-[#FAF6EE] border-b border-[#DCD4C4] shadow-[0_1px_4px_rgba(35,32,27,0.03)] transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Brand / Logo */}
-        <div className="flex items-center gap-3">
+        {/* Brand / Logo & Mobile Menu Trigger */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Mobile Side Nav Toggle Button */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+            className="md:hidden p-2 -ml-1 rounded-xl bg-[#EAE4D6] hover:bg-[#DCD4C4] active:scale-95 text-[#1B3B34] border border-[#DCD4C4] transition-all flex items-center justify-center"
+            title="Open Navigation Menu"
+            aria-label="Open Navigation Menu"
+          >
+            <Menu className="w-5 h-5 stroke-[2.2]" />
+          </button>
+
           <div className="w-10 h-10 rounded-xl bg-[#FAF6EE] p-1 shadow-xs border border-[#DCD4C4] flex items-center justify-center shrink-0 overflow-hidden">
             <img
               src="/logo.jpg"
