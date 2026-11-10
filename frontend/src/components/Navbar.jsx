@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Clock, ShieldCheck } from 'lucide-react';
+import { getPhotoUrl } from '../api/client';
+import { LogOut, Clock, ShieldCheck, User } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout, isAdmin } = useAuth();
@@ -53,38 +55,44 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* User info badge */}
+          {/* User info badge with link to Profile */}
           {user && (
             <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-[#DCD4C4]">
-              <div className="text-right">
-                <div className="flex items-center justify-end gap-1.5">
-                  <span className="text-xs font-bold text-[#23201B] hidden sm:inline">{user.name}</span>
-                  {isAdmin ? (
-                    <span className="text-[10px] bg-[#1B3B34] text-[#FAF6EE] font-extrabold px-2 py-0.5 rounded-full border border-[#142E28] flex items-center gap-1">
-                      <ShieldCheck className="w-3 h-3 text-[#E2ECE6]" />
-                      Admin
-                    </span>
+              <NavLink
+                to="/profile"
+                className="flex items-center gap-2 sm:gap-3 text-right group hover:opacity-90 transition-opacity"
+                title="View & Edit My Profile"
+              >
+                <div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="text-xs font-bold text-[#23201B] hidden sm:inline group-hover:text-[#C25E37] transition-colors">{user.name}</span>
+                    {isAdmin ? (
+                      <span className="text-[10px] bg-[#1B3B34] text-[#FAF6EE] font-extrabold px-2 py-0.5 rounded-full border border-[#142E28] flex items-center gap-1">
+                        <ShieldCheck className="w-3 h-3 text-[#E2ECE6]" />
+                        Admin
+                      </span>
+                    ) : (
+                      <span className="text-[10px] bg-[#EAE4D6] text-[#23201B] font-bold px-2 py-0.5 rounded-full border border-[#DCD4C4]">
+                        {user.employeeId}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[#5A5347] hidden sm:block font-medium truncate max-w-[150px]">
+                    {user.designation || user.department}
+                  </div>
+                </div>
+
+                {/* Avatar with handcrafted terracotta ring */}
+                <div className="w-9 h-9 rounded-full bg-[#FAF6EE] border-2 border-[#C25E37] p-0.5 shadow-xs shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform">
+                  {user.profileImage ? (
+                    <img src={getPhotoUrl(user.profileImage)} alt={user.name} className="w-full h-full object-cover rounded-full" />
                   ) : (
-                    <span className="text-[10px] bg-[#EAE4D6] text-[#23201B] font-bold px-2 py-0.5 rounded-full border border-[#DCD4C4]">
-                      {user.employeeId}
+                    <span className="bg-[#1B3B34] w-full h-full rounded-full flex items-center justify-center text-[#FAF6EE] font-black text-xs">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-[#5A5347] hidden sm:block font-medium truncate max-w-[150px]">
-                  {user.designation || user.department}
-                </div>
-              </div>
-
-              {/* Avatar with handcrafted terracotta ring */}
-              <div className="w-9 h-9 rounded-full bg-[#FAF6EE] border-2 border-[#C25E37] p-0.5 shadow-xs shrink-0 flex items-center justify-center">
-                {user.profileImage ? (
-                  <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover rounded-full" />
-                ) : (
-                  <span className="bg-[#1B3B34] w-full h-full rounded-full flex items-center justify-center text-[#FAF6EE] font-black text-xs">
-                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                  </span>
-                )}
-              </div>
+              </NavLink>
 
               {/* Logout Button */}
               <button

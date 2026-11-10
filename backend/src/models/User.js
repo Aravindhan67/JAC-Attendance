@@ -63,6 +63,34 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    dob: {
+      type: String,
+      default: '',
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other', ''],
+      default: '',
+    },
+    bloodGroup: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    address: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    emergencyContact: {
+      name: { type: String, default: '', trim: true },
+      relationship: { type: String, default: '', trim: true },
+      phone: { type: String, default: '', trim: true },
+    },
+    joiningDate: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,

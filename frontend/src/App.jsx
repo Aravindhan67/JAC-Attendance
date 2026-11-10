@@ -12,6 +12,7 @@ const EmployeeDashboard = lazy(() => import('./pages/EmployeeDashboard'));
 const MyAttendance = lazy(() => import('./pages/MyAttendance'));
 const MyLeaves = lazy(() => import('./pages/MyLeaves'));
 const MyTasks = lazy(() => import('./pages/MyTasks'));
+const Profile = lazy(() => import('./pages/Profile'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminAttendance = lazy(() => import('./pages/AdminAttendance'));
 const AdminLeaves = lazy(() => import('./pages/AdminLeaves'));
@@ -87,6 +88,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <MyLeaves />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

@@ -8,6 +8,7 @@ import {
   Users,
   Camera,
   CheckSquare,
+  User,
 } from 'lucide-react';
 
 export default function BottomNav() {
@@ -19,18 +20,19 @@ export default function BottomNav() {
   // Employee Navigation (Camera in center navigating to Check-In / Dashboard)
   const employeeItems = [
     { to: '/', label: 'Overview', icon: LayoutDashboard, exact: true },
-    { to: '/tasks', label: 'Tasks', icon: CheckSquare },
-    { to: '/', label: 'Check In', icon: Camera, isCenter: true, exact: true },
     { to: '/my-attendance', label: 'History', icon: CalendarCheck2 },
+    { to: '/', label: 'Check In', icon: Camera, isCenter: true, exact: true },
     { to: '/my-leaves', label: 'Leaves', icon: CalendarOff },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
-  // Admin Navigation (Clean 4-tab management dock without camera button)
+  // Admin Navigation (Clean 5-tab management dock)
   const adminItems = [
     { to: '/admin', label: 'Overview', icon: LayoutDashboard, exact: true },
     { to: '/admin/tasks', label: 'Tasks', icon: CheckSquare },
     { to: '/admin/leaves', label: 'Leaves', icon: CalendarOff },
     { to: '/admin/employees', label: 'Staff', icon: Users },
+    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   const items = isAdmin ? adminItems : employeeItems;

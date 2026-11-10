@@ -8,6 +8,7 @@ import {
   Users,
   Camera,
   CheckSquare,
+  User,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -18,6 +19,7 @@ export default function Sidebar() {
     { to: '/tasks', label: 'My Tasks', icon: CheckSquare },
     { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck2 },
     { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
+    { to: '/profile', label: 'My Profile', icon: User },
   ];
 
   const adminLinks = [
