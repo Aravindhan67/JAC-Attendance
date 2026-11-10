@@ -215,25 +215,84 @@ export default function ManualCheckInModal({
         normalizedDate = `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`;
       }
 
+      // Calculate totalHours if both checkIn and checkOut are provided
+      let calculatedHours = undefined;
+      if (checkInTime && checkOutTime) {
+        const [inH, inM] = checkInTime.split(':').map(Number);
+        const [outH, outM] = checkOutTime.split(':').map(Number);
+        const diffMinutes = (outH * 60 + outM) - (inH * 60 + inM);
+        if (diffMinutes > 0) {
+          calculatedHours = Math.round((diffMinutes / 60) * 10) / 10;
+        }
+      }
+
       const payload = {
         userId: currentEmployee?._id || currentEmployee?.id || selectedUserId,
         employeeId: currentEmployee?.employeeId,
         date: normalizedDate,
         checkInTime,
         checkOutTime: checkOutTime || undefined,
+        totalHours: calculatedHours,
         status,
         location,
         note: adminRemark || 'Manual Check-in by Admin',
         adminRemark: adminRemark || 'Manual attendance recorded by Admin',
       };
 
-      const res = await api.post('/attendance/manual-checkin', payload);
+      try {
+        const res = await api.post('/attendance/manual-checkin', payload);
 
-      if (res.data.success) {
-        if (onSuccess) onSuccess(res.data.data, res.data.message);
-        onClose();
-      } else {
-        setError(res.data.message || 'Failed to record manual check-in.');
+        if (res.data?.success) {
+          if (onSuccess) onSuccess(res.data.data, res.data.message);
+          onClose();
+          return;
+        } else {
+          setError(res.data?.message || 'Failed to record manual check-in.');
+          return;
+        }
+      } catch (postErr) {
+        // If 404, check if backend deployment is pending OR if an existing record can be updated via PUT /attendance/:id
+        if (postErr.response?.status === 404) {
+          console.warn('POST /attendance/manual-checkin returned 404. Attempting fallback lookup on existing record...');
+          try {
+            const feedRes = await api.get(`/attendance/all?date=${normalizedDate}`);
+            const records = feedRes.data?.data || feedRes.data || [];
+            const existing = Array.isArray(records)
+              ? records.find(
+                  (r) =>
+                    String(r.user?._id || r.user?.id || r.user) === String(payload.userId) ||
+                    (payload.employeeId && String(r.user?.employeeId) === String(payload.employeeId))
+                )
+              : null;
+
+            if (existing && existing._id) {
+              const putRes = await api.put(`/attendance/${existing._id}`, {
+                status: payload.status,
+                adminRemark: payload.adminRemark,
+                totalHours: calculatedHours || existing.totalHours,
+              });
+              if (putRes.data?.success) {
+                if (onSuccess) {
+                  onSuccess(
+                    putRes.data.data,
+                    `Updated attendance for ${currentEmployee?.name || 'employee'} to ${payload.status.toUpperCase()}`
+                  );
+                }
+                onClose();
+                return;
+              }
+            }
+          } catch (fallbackErr) {
+            console.warn('Fallback record update check failed:', fallbackErr.message);
+          }
+
+          setError(
+            'RENDER_DEPLOYMENT_PENDING: Backend route not ready yet (404). Please go to your Render Dashboard (dashboard.render.com) -> click "Manual Deploy" -> "Deploy latest commit", then retry.'
+          );
+          return;
+        }
+
+        throw postErr;
       }
     } catch (err) {
       console.error('Manual checkin error:', err);
@@ -281,9 +340,42 @@ export default function ManualCheckInModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
           {error && (
-            <div className="bg-[#FBEBE8] border border-[#F2C0B7] text-[#C25E37] p-3 rounded-2xl text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
+            <div className="bg-[#FBEBE8] border border-[#F2C0B7] text-[#C25E37] p-3.5 rounded-2xl text-xs space-y-2">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  {error.startsWith('RENDER_DEPLOYMENT_PENDING:') ? (
+                    <div>
+                      <p className="font-bold text-[#A74420] mb-1">
+                        Backend Update Deployment Needed
+                      </p>
+                      <p className="text-[11px] leading-relaxed text-[#5A5347]">
+                        The newly added manual check-in route is waiting for Render to deploy the latest code.
+                        Please open your Render backend dashboard and trigger a deploy:
+                      </p>
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <a
+                          href="https://dashboard.render.com"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1B3B34] text-[#FAF6EE] text-[11px] font-bold rounded-lg hover:bg-[#254F46] transition-colors"
+                        >
+                          Open Render Dashboard ↗
+                        </a>
+                        <button
+                          type="button"
+                          onClick={handleSubmit}
+                          className="px-3 py-1.5 bg-[#FAF6EE] border border-[#DCD4C4] text-[#1B3B34] text-[11px] font-bold rounded-lg hover:bg-[#EAE4D6] transition-colors"
+                        >
+                          Retry Now
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <span>{error}</span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
